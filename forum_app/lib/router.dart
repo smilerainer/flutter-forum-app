@@ -1,8 +1,8 @@
-import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:forum_app/features/auth/logic/auth_view_model.dart';
 import 'package:forum_app/features/auth/presentation/screens/login_screen.dart';
 import 'package:forum_app/features/auth/presentation/screens/register_screen.dart';
+import 'package:forum_app/posts/screens/post_list_screen.dart';
 
 GoRouter buildRouter(AuthViewModel authViewModel) {
   return GoRouter(
@@ -18,7 +18,7 @@ GoRouter buildRouter(AuthViewModel authViewModel) {
       ),
       GoRoute(
         path: '/posts',
-        builder: (context, state) => const Scaffold(body: Center(child: Text('Posts placeholder'))),
+        builder: (context, state) => const PostListScreen()
       ),
     ],
     redirect: (context, state) {

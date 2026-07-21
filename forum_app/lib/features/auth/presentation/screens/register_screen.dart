@@ -11,7 +11,9 @@ class RegisterScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final authViewModel = context.read<AuthViewModel>();
     return Scaffold(
-      appBar: AppBar(title: const Text('Register')),
+      appBar: AppBar(
+        title: const Text('Register')
+        ),
       body: Padding(
         padding: const EdgeInsets.all(24),
         child: Center(
