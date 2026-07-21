@@ -11,7 +11,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Supabase.initialize(
     url: Env.supabaseUrl,
-    anonKey: Env.supabaseAnonKey,
+    publishableKey: Env.supabasePublishableKey,
   );
 
   final authViewModel = AuthViewModel(AuthService());

@@ -8,7 +8,7 @@ import 'package:forum_app/features/posts/presentation/screens/post_list_screen.d
 
 class FakeAuthViewModel extends ChangeNotifier implements AuthViewModel {
   bool _loggedIn;
-  FakeAuthViewModel({bool loggedIn = false}) : _loggedIn = loggedIn;
+  FakeAuthViewModel({this._loggedIn = false});
 
   @override
   bool get isLoggedIn => _loggedIn;
