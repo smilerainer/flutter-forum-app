@@ -1,0 +1,17 @@
+name: Flutter Tests
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 'stable'
+      - run: flutter pub get
+        working-directory: forum_app
+      - run: cp lib/core/env.dart.example lib/core/env.dart
+        working-directory: forum_app
+      - run: flutter test
+        working-directory: forum_app
