@@ -4,14 +4,20 @@ import 'package:forum_app/core/data/supabase_service.dart';
 import 'package:forum_app/core/result.dart';
 
 class StorageService {
-  final _client = SupabaseService.client;
+  late final SupabaseClient _client;
+  final DateTime Function() _now;
+
+  StorageService({SupabaseClient? client, DateTime Function()? now})
+      : _client = client ?? SupabaseService.client,
+        _now = now ?? DateTime.now;
 
   String _buildFilePath(String directory, String extension) {
-    final fileName = '${DateTime.now().millisecondsSinceEpoch}.$extension';
+    final fileName = '${_now().millisecondsSinceEpoch}.$extension';
     return '$directory/$fileName';
   }
 
-  Future<Result<String>> uploadFile(Uint8List rawFile,{String? path, String? directory, String extension = 'png'}) async {
+  Future<Result<String>> uploadFile(Uint8List rawFile,
+      {String? path, String? directory, String extension = 'png'}) async {
     const fileOptions = FileOptions(cacheControl: '3600', upsert: true);
     try {
       final targetPath = path ?? _buildFilePath(directory!, extension);
@@ -26,12 +32,16 @@ class StorageService {
     }
   }
 
-  Future<Result<void>> deleteFile({String? path, String? directory, String? filename,}) async {
+  Future<Result<void>> deleteFile({
+    String? path,
+    String? directory,
+    String? filename,
+  }) async {
     final targetPath = path ?? '$directory/$filename';
     try {
       await _client.storage
-      .from('images')
-      .remove([targetPath]);
+          .from('images')
+          .remove([targetPath]);
       return const Success<void>(null);
     } on StorageException catch (e) {
       return Failure<void>(e.message);
@@ -40,14 +50,13 @@ class StorageService {
     }
   }
 
-
-  Future<List<Result<String>>> uploadMany (String userId, String file) async {
+  Future<List<Result<String>>> uploadFileBatch(String userId, String file) async {
     final List<Result<String>> results = [];
-    return results; 
+    return results;
   }
 
-  Future<List<Result<String>>> deleteMany (String userId, String file) async {
+  Future<List<Result<String>>> deleteFileBatch(String userId, String file) async {
     final List<Result<String>> results = [];
-    return results; 
+    return results;
   }
 }
