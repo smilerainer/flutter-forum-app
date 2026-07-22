@@ -58,18 +58,21 @@ Future<Result<String>> uploadTest() async {
 
   final Uint8List bytes = await pickedFile.readAsBytes();
   final storage = StorageService();
-  return storage.uploadFile('debug', bytes, 'debug/images');
+  final timestamp = DateTime.now().millisecondsSinceEpoch;
+  final filename = 'debug/images/$timestamp.jpg';
+  return storage.uploadFile('debug', bytes, filename);
 }
 
 
 List<Widget> buttons(_DebugConsoleState s) => [
   ElevatedButton(
-    onPressed: () => s.run('Upload', () async {
-      final result = await uploadTest();
-      return switch (result) {
-        Success<String>(:final data) => data,
-        Failure<String>(:final message) => throw Exception(message),
-      };
+    onPressed: s._busy ? null :() => s.run(
+      'Upload', () async {
+        final result = await uploadTest();
+        return switch (result) {
+          Success<String>(:final data) => data,
+          Failure<String>(:final message) => throw Exception(message),
+        };
     }),
     child: const Text('Upload Image')
     )
