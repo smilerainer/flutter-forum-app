@@ -1,6 +1,10 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import 'package:forum_app/core/data/storage_service.dart';
+import 'package:forum_app/core/result.dart';
+import 'package:image_picker/image_picker.dart';
+
 class DebugConsole extends StatefulWidget {
   const DebugConsole({super.key});
   @override
@@ -31,7 +35,7 @@ class _DebugConsoleState extends State<DebugConsole> {
     return Scaffold(
       appBar: AppBar(title: const Text('DEBUG CONSOLE')),
       body: Column(children: [
-        Wrap(spacing: 8, children: buttons(this)), // grows every phase
+        Wrap(spacing: 8, children: buttons(this)),
         const Divider(),
         Expanded(
           child: ListView(children: _log.map((l) => Padding(
@@ -44,6 +48,29 @@ class _DebugConsoleState extends State<DebugConsole> {
   }
 }
 
+Future<Result<String>> uploadTest() async {
+  final picker = ImagePicker();
+  final XFile? pickedFile = await picker.pickImage(source: ImageSource.gallery);
+
+  if (pickedFile == null) {
+    return const Failure('No image selected.');
+  }
+
+  final Uint8List bytes = await pickedFile.readAsBytes();
+  final storage = StorageService();
+  return storage.uploadFile('debug', bytes, 'debug/images');
+}
+
+
 List<Widget> buttons(_DebugConsoleState s) => [
- 
+  ElevatedButton(
+    onPressed: () => s.run('Upload', () async {
+      final result = await uploadTest();
+      return switch (result) {
+        Success<String>(:final data) => data,
+        Failure<String>(:final message) => throw Exception(message),
+      };
+    }),
+    child: const Text('Upload Image')
+    )
 ];

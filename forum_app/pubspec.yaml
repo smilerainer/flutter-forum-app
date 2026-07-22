@@ -13,6 +13,8 @@ dependencies:
   supabase_flutter: 
   go_router:
 
+  image_picker:
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
