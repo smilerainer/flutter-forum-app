@@ -44,7 +44,6 @@ class _DebugConsoleState extends State<DebugConsole> {
   }
 }
 
-// Separate function so each phase's buttons are appended here, not buried in State.
 List<Widget> buttons(_DebugConsoleState s) => [
-  // phase buttons get added here as you build
+ 
 ];

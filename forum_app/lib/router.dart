@@ -8,7 +8,8 @@ import 'package:forum_app/features/posts/presentation/screens/post_list_screen.d
 
 String? authRedirect({required bool loggedIn, required String matchedLocation}) {
   final onAuthScreen = matchedLocation == '/login' || matchedLocation == '/register';
-  final isPublicRoute = matchedLocation.startsWith('/posts');
+  final isPublicRoute = matchedLocation.startsWith('/posts') || matchedLocation.startsWith('/debug');
+
 
   if (!loggedIn && !onAuthScreen && !isPublicRoute) return '/login';
   if (loggedIn && onAuthScreen) return '/posts';
