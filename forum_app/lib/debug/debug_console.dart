@@ -48,32 +48,48 @@ class _DebugConsoleState extends State<DebugConsole> {
   }
 }
 
-Future<Result<String>> uploadTest() async {
-  final picker = ImagePicker();
-  final XFile? pickedFile = await picker.pickImage(source: ImageSource.gallery);
-
-  if (pickedFile == null) {
-    return const Failure('No image selected.');
-  }
-
-  final Uint8List bytes = await pickedFile.readAsBytes();
-  final storage = StorageService();
-  final timestamp = DateTime.now().millisecondsSinceEpoch;
-  final filename = 'debug/images/$timestamp.jpg';
-  return storage.uploadFile('debug', bytes, filename);
-}
-
-
 List<Widget> buttons(_DebugConsoleState s) => [
   ElevatedButton(
     onPressed: s._busy ? null :() => s.run(
       'Upload', () async {
-        final result = await uploadTest();
-        return switch (result) {
-          Success<String>(:final data) => data,
-          Failure<String>(:final message) => throw Exception(message),
-        };
+      final result = await uploadTest();
+      return switch (result) {
+        Success<String>(:final data) => (s.lastUploadPath = data, data).$2,
+        Failure<String>(:final message) => throw Exception(message),
+      };
     }),
     child: const Text('Upload Image')
-    )
+  ),
+  ElevatedButton(
+    onPressed: (s._busy || s.lastUploadPath == null) ? null : () => s.run(
+      'Delete', () async {
+      final relativePath = s.lastUploadPath!.replaceFirst('images/', '');
+      final result = await deleteTest(relativePath);
+      return switch (result) {
+        Success<void> _ => s.lastUploadPath!,
+        Failure<void>(:final message) => throw Exception(message),
+      };
+    }),
+    child: const Text('Delete Test')
+  ),
 ];
+
+
+  Future<Result<String>> uploadTest() async {
+    final picker = ImagePicker();
+    final XFile? pickedFile = await picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedFile == null) {
+      return const Failure('No image selected.');
+    }
+
+    final Uint8List bytes = await pickedFile.readAsBytes();
+    final storage = StorageService();
+    final ext = pickedFile.name.split('.').last;
+    return storage.uploadFile(bytes, directory: 'debug', extension: ext);
+  }
+
+Future<Result<void>> deleteTest(String f) async {
+  final storage = StorageService();
+  return storage.deleteFile(path: f);
+}
