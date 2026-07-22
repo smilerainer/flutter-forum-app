@@ -1,9 +1,10 @@
-import 'package:flutter/foundation.dart';
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 import 'package:forum_app/core/data/storage_service.dart';
 import 'package:forum_app/core/result.dart';
-import 'package:image_picker/image_picker.dart';
 
 class DebugConsole extends StatefulWidget {
   const DebugConsole({super.key});
@@ -14,9 +15,9 @@ class DebugConsole extends StatefulWidget {
 class _DebugConsoleState extends State<DebugConsole> {
   final List<String> _log = [];
   bool _busy = false;
-  String? lastPostId;
-  String? lastCommentId;
+
   String? lastUploadPath;
+  List<String>? lastBatchPaths;
 
   Future<void> run(String label, Future<String> Function() action) async {
     setState(() => _busy = true);
@@ -35,13 +36,20 @@ class _DebugConsoleState extends State<DebugConsole> {
     return Scaffold(
       appBar: AppBar(title: const Text('DEBUG CONSOLE')),
       body: Column(children: [
-        Wrap(spacing: 8, children: buttons(this)),
+        Wrap(spacing: 8, runSpacing: 8, children: buttons(this)),
         const Divider(),
         Expanded(
-          child: ListView(children: _log.map((l) => Padding(
-            padding: const EdgeInsets.all(4),
-            child: Text(l, style: const TextStyle(fontFamily: 'monospace', fontSize: 12)),
-          )).toList()),
+          child: ListView(
+            children: _log
+                .map((l) => Padding(
+                      padding: const EdgeInsets.all(4),
+                      child: SelectableText(
+                        l,
+                        style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
+                      ),
+                    ))
+                .toList(),
+          ),
         ),
       ]),
     );
@@ -49,47 +57,92 @@ class _DebugConsoleState extends State<DebugConsole> {
 }
 
 List<Widget> buttons(_DebugConsoleState s) => [
-  ElevatedButton(
-    onPressed: s._busy ? null :() => s.run(
-      'Upload', () async {
-      final result = await uploadTest();
-      return switch (result) {
-        Success<String>(:final data) => (s.lastUploadPath = data, data).$2,
-        Failure<String>(:final message) => throw Exception(message),
-      };
-    }),
-    child: const Text('Upload Image')
-  ),
-  ElevatedButton(
-    onPressed: (s._busy || s.lastUploadPath == null) ? null : () => s.run(
-      'Delete', () async {
-      final relativePath = s.lastUploadPath!.replaceFirst('images/', '');
-      final result = await deleteTest(relativePath);
-      return switch (result) {
-        Success<void> _ => s.lastUploadPath!,
-        Failure<void>(:final message) => throw Exception(message),
-      };
-    }),
-    child: const Text('Delete Test')
-  ),
-];
+      ElevatedButton(
+        onPressed: s._busy
+            ? null
+            : () => s.run('Upload', () async {
+                  final storage = StorageService();
+                  final picker = ImagePicker();
+                  final picked = await picker.pickImage(source: ImageSource.gallery);
+                  if (picked == null) throw Exception('No image selected.');
 
+                  final bytes = await picked.readAsBytes();
+                  final ext = picked.name.contains('.') ? picked.name.split('.').last : 'png';
+                  final result = await storage.uploadFile(bytes, directory: 'debug', extension: ext);
 
-  Future<Result<String>> uploadTest() async {
-    final picker = ImagePicker();
-    final XFile? pickedFile = await picker.pickImage(source: ImageSource.gallery);
+                  return switch (result) {
+                    Success<String>(:final data) => (s.lastUploadPath = data),
+                    Failure<String>(:final message) => throw Exception(message),
+                  };
+                }),
+        child: const Text('Test: Upload Image'),
+      ),
+      ElevatedButton(
+        onPressed: (s._busy || s.lastUploadPath == null)
+            ? null
+            : () => s.run('Get Public URL', () async {
+                  final storage = StorageService();
+                  return storage.getPublicUrl(s.lastUploadPath!);
+                }),
+        child: const Text('Test: Get Public URL'),
+      ),
+      ElevatedButton(
+        onPressed: (s._busy || s.lastUploadPath == null) ? null : () => s.run(
+          'Delete', () async {
+          final relativePath = s.lastUploadPath!.replaceFirst('images/', '');
+          final storage = StorageService();
+          final result = await storage.deleteFile(path: relativePath);
+          return switch (result) {
+            Success<void> _ => s.lastUploadPath!,
+            Failure<void>(:final message) => throw Exception(message),
+          };
+        }),
+        child: const Text('Test: Delete Recent')
+      ),
+      ElevatedButton(
+        onPressed: s._busy
+            ? null
+            : () => s.run('Batch Upload', () async {
+                  final storage = StorageService();
+                  final picker = ImagePicker();
+                  final picked = await picker.pickMultiImage();
+                  if (picked.length != 3) {
+                    throw Exception('Pick exactly 3 images (picked ${picked.length}).');
+                  }
 
-    if (pickedFile == null) {
-      return const Failure('No image selected.');
-    }
+                  final byteList = <Uint8List>[
+                    for (final f in picked) await f.readAsBytes(),
+                  ];
+                  final results = await storage.uploadFileBatch(byteList, directory: 'debug');
 
-    final Uint8List bytes = await pickedFile.readAsBytes();
-    final storage = StorageService();
-    final ext = pickedFile.name.split('.').last;
-    return storage.uploadFile(bytes, directory: 'debug', extension: ext);
-  }
+                  final failures = results.whereType<Failure<String>>().toList();
+                  if (failures.isNotEmpty) {
+                    throw Exception('${failures.length}/3 failed: ${failures.map((f) => f.message).join('; ')}');
+                  }
 
-Future<Result<void>> deleteTest(String f) async {
-  final storage = StorageService();
-  return storage.deleteFile(path: f);
-}
+                  final paths = results.cast<Success<String>>().map((r) => r.data).toList();
+                  s.lastBatchPaths = paths;
+                  return paths.join(', ');
+                }),
+        child: const Text('Test: Batch Upload (3)'),
+      ),
+      ElevatedButton(
+        onPressed: (s._busy || s.lastBatchPaths == null)
+            ? null
+            : () => s.run('Batch Delete', () async {
+                  final storage = StorageService();
+                  final results = await storage.deleteFileBatch(s.lastBatchPaths!);
+
+                  final failures = results.whereType<Failure<void>>().toList();
+                  if (failures.isNotEmpty) {
+                    throw Exception(
+                        '${failures.length}/${results.length} failed: ${failures.map((f) => f.message).join('; ')}');
+                  }
+
+                  final count = results.length;
+                  s.lastBatchPaths = null;
+                  return '$count files deleted';
+                }),
+        child: const Text('Test: Batch Delete'),
+      ),
+    ];

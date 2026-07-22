@@ -1,9 +1,13 @@
 import 'dart:typed_data';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
+
 import 'package:forum_app/core/data/supabase_service.dart';
 import 'package:forum_app/core/result.dart';
 
 class StorageService {
+  static const _bucket = 'images';
+
   late final SupabaseClient _client;
   final DateTime Function() _now;
 
@@ -16,32 +20,38 @@ class StorageService {
     return '$directory/$fileName';
   }
 
-  Future<Result<String>> uploadFile(Uint8List rawFile,
-      {String? path, String? directory, String extension = 'png'}) async {
+  String getPublicUrl(String path) {
+    return _client.storage.from(_bucket).getPublicUrl(path);
+  }
+
+  Future<Result<String>> uploadFile(Uint8List rawFile, {
+    String? path, String? directory, String extension = 'png',
+  }) async {
     const fileOptions = FileOptions(cacheControl: '3600', upsert: true);
     try {
       final targetPath = path ?? _buildFilePath(directory!, extension);
-      final String url = await _client.storage
-          .from('images')
+      final storedPath = await _client.storage
+          .from(_bucket)
           .uploadBinary(targetPath, rawFile, fileOptions: fileOptions);
-      return Success<String>(url);
+      return Success<String>(storedPath.replaceFirst('images/', ''));
     } on StorageException catch (e) {
-      return Failure(e.message);
+      return Failure<String>(e.message);
     } catch (_) {
       return const Failure<String>('Upload failed. Please try again.');
     }
   }
 
   Future<Result<void>> deleteFile({
-    String? path,
-    String? directory,
-    String? filename,
+  String? path, String? directory, String? filename,
   }) async {
     final targetPath = path ?? '$directory/$filename';
     try {
-      await _client.storage
+      final removed = await _client.storage
           .from('images')
           .remove([targetPath]);
+      if (removed.isEmpty) {
+        return const Failure<void>('No object was deleted. It may not exist or RLS blocked the operation.');
+      }
       return const Success<void>(null);
     } on StorageException catch (e) {
       return Failure<void>(e.message);
@@ -50,13 +60,28 @@ class StorageService {
     }
   }
 
-  Future<List<Result<String>>> uploadFileBatch(String userId, String file) async {
-    final List<Result<String>> results = [];
+
+
+  Future<List<Result<String>>> uploadFileBatch(
+    List<Uint8List> files, {
+    required String directory,
+    String extension = 'png',
+  }) async {
+    final results = <Result<String>>[];
+    for (final file in files) {
+      results.add(
+        await uploadFile(file, directory: directory, extension: extension),
+      );
+    }
     return results;
   }
 
-  Future<List<Result<String>>> deleteFileBatch(String userId, String file) async {
-    final List<Result<String>> results = [];
+  Future<List<Result<void>>> deleteFileBatch(List<String> paths) async {
+    final results = <Result<void>>[];
+    for (final path in paths) {
+      final cleanPath = path.replaceFirst('images/', '');
+      results.add(await deleteFile(path: cleanPath));
+    }
     return results;
   }
 }
