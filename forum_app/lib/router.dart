@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:forum_app/debug/debug_console.dart';
+import 'package:forum_app/debug/console.dart';
 import 'package:go_router/go_router.dart';
 import 'package:forum_app/features/auth/logic/auth_view_model.dart';
 import 'package:forum_app/features/auth/presentation/screens/login_screen.dart';
