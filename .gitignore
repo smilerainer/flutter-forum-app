@@ -3,3 +3,5 @@ old.forum_app/
 
 # DATABASE
 forum_app/lib/core/env.dart
+.agents/
+notes/

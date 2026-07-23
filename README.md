@@ -2,15 +2,15 @@
 # Flutter: Forum Webapp Showcase
 
 ## Users
-[ ] Registration with Email and Password
+[/] Registration with Email and Password
 
-[ ] Login
+[/] Login
 
-[ ] Logout
+[/] Logout
 
-[ ] Profile Page with Photo CRUD
+[/] Profile Page with Photo CRUD
 
-[ ] Profile Page Name Update
+[/] Profile Page Name Update
 
 ## Posts CRUD
 [ ] Public Post Listing
