@@ -1,7 +1,5 @@
 import 'dart:typed_data';
-
 import 'package:supabase_flutter/supabase_flutter.dart';
-
 import 'package:forum_app/core/data/supabase_service.dart';
 import 'package:forum_app/core/result.dart';
 

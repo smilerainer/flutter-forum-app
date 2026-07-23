@@ -10,14 +10,14 @@ class ImageRef {
   });
 
   factory ImageRef.fromJson(Map<String, dynamic> json) => ImageRef(
-        id: json['id'] as String,
-        storagePath: json['storage_path'] as String,
-        position: json['position'] as int,
-      );
+    id: json['id'] as String,
+    storagePath: json['storage_path'] as String,
+    position: json['position'] as int,
+  );
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'storage_path': storagePath,
-        'position': position,
-      };
+    'id': id,
+    'storage_path': storagePath,
+    'position': position,
+  };
 }
