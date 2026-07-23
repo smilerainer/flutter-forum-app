@@ -1,4 +1,7 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:forum_app/core/result.dart';
@@ -75,21 +78,63 @@ class _DebugConsoleState extends State<DebugConsole> {
 
 List<Widget> buttons(_DebugConsoleState s) => [
       ElevatedButton(
-              onPressed: s._busy
+        onPressed: s._busy
             ? null
             : () => s.run('Fetch Profile', () async {
                   final uid = s._textController.text.trim();
                   if (uid.isEmpty) throw Exception('Enter a UID first.');
                   final service = ProfileService();
                   final result = await service.fetchProfile(uid);
-                  s._lastFetchedUid = uid;
-                  return switch (result) {
-                    Success<UserProfile>(:final data) =>
-                      '${data.display_name} / ${data.avatar_url ?? 'none'}',
+                  if (result is Success<UserProfile>) {
+                    s._lastFetchedUid = uid;
+                    return '${result.data.displayName} / ${result.data.avatarUrl ?? 'none'}';
+                  }
+                  throw Exception((result as Failure<UserProfile>).message);
+                }),
+        child: const Text('Fetch Profile by UID'),
+      ),
+      ElevatedButton(
+        onPressed: (s._busy || s._lastFetchedUid == null)
+            ? null
+            : () => s.run('Update Name', () async {
+                  final newName = s._textController.text.trim();
+                  if (newName.isEmpty) throw Exception('Enter a new name first.');
+                  final service = ProfileService();
+                  final updateResult = await service.updateProfile(s._lastFetchedUid!, newName);
+                  if (updateResult is Failure) {
+                    throw Exception((updateResult as Failure).message);
+                  }
+                  final refetchResult = await service.fetchProfile(s._lastFetchedUid!);
+                  return switch (refetchResult) {
+                    Success<UserProfile>(:final data) => data.displayName,
                     Failure<UserProfile>(:final message) =>
                       throw Exception(message),
                   };
                 }),
-        child: const Text('Fetch Profile by UID'),
-      )
+        child: const Text('Update Name for Last Fetched UID'),
+      ),
+      ElevatedButton(
+        onPressed: (s._busy || s._lastFetchedUid == null)
+            ? null
+            : () => s.run('Update Avatar', () async {
+                  final picker = ImagePicker();
+                  final picked = await picker.pickImage(source: ImageSource.gallery);
+                  if (picked == null) throw Exception('No image selected.');
+                  final bytes = await picked.readAsBytes();
+                  final ext = picked.name.contains('.') ? picked.name.split('.').last : 'png';
+                  final service = ProfileService();
+                  final updateResult = await service.updateAvatar(s._lastFetchedUid!, bytes, extension: ext);
+                  if (updateResult is Failure) {
+                    throw Exception((updateResult as Failure).message);
+                  }
+                  final refetchResult = await service.fetchProfile(s._lastFetchedUid!);
+                  return switch (refetchResult) {
+                    Success<UserProfile>(:final data) =>
+                      data.avatarUrl ?? 'none',
+                    Failure<UserProfile>(:final message) =>
+                      throw Exception(message),
+                  };
+                }),
+        child: const Text('Update Avatar for Last Fetched UID'),
+      ),
     ];

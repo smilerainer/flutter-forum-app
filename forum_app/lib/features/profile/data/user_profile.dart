@@ -1,34 +1,34 @@
 class UserProfile {
     final String id;
-    final String display_name;
-    final String? avatar_url;
+    final String displayName;
+    final String? avatarUrl;
 
-    final DateTime created_at;
-    final DateTime? updated_at;
+    final DateTime createdAt;
+    final DateTime? updatedAt;
 
     const UserProfile ({
       required this.id,
-      required this.display_name,
-      required this.avatar_url,
+      required this.displayName,
+      required this.avatarUrl,
 
-      required this.created_at,
-      required this.updated_at,
+      required this.createdAt,
+      required this.updatedAt,
     });
 
     factory UserProfile.fromJson(Map<String, dynamic> json) => UserProfile(
       id: json['id'] as String,
-      display_name: json['display_name'] as String,
-      avatar_url: json['avatar_url'] as String,
+      displayName: json['display_name'] as String,
+      avatarUrl: json['avatar_url'] as String,
 
-      created_at: json['created_at'] as DateTime,
-      updated_at: json['updated_at'] as DateTime,
+      createdAt: json['created_at'] as DateTime,
+      updatedAt: json['updated_at'] as DateTime,
     );
     Map<String, dynamic> toJson() => {
       'id': id,
-      'display_name': display_name,
-      'avatar_url': avatar_url,
+      'display_name': displayName,
+      'avatar_url': avatarUrl,
 
-      'created_at': created_at,
-      'updated_at': updated_at,
+      'created_at': createdAt,
+      'updated_at': updatedAt,
     };
   }

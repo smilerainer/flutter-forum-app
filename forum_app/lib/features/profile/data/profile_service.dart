@@ -4,6 +4,7 @@ import 'package:forum_app/core/data/supabase_service.dart';
 import 'package:forum_app/core/result.dart';
 
 import 'package:forum_app/features/profile/data/user_profile.dart';
+import 'package:forum_app/core/data/storage_service.dart';
 
 class ProfileService {
   late final SupabaseClient _client;
@@ -22,10 +23,10 @@ class ProfileService {
       .maybeSingle() as Map<String, dynamic>;
       return Success(UserProfile(
         id: uid,
-        display_name: raw['display_name'],
-        avatar_url: raw['avatar_url'],
-        created_at: DateTime.parse(raw['created_at'] as String),
-        updated_at: DateTime.parse(raw['updated_at'] as String),
+        displayName: raw['display_name'],
+        avatarUrl: raw['avatar_url'],
+        createdAt: DateTime.parse(raw['created_at'] as String),
+        updatedAt: DateTime.parse(raw['updated_at'] as String),
       ));
     } on PostgrestException catch(e){
       return Failure(e.message);
@@ -35,10 +36,38 @@ class ProfileService {
   }
 
   Future<Result<void>> updateProfile(String uid, String newName) async {
-    return Failure('Failed to update name. Please try again.');
+    try {
+      await _client
+        .from('profiles')
+        .update({'display_name': newName, 'updated_at': _now().toIso8601String()})
+        .eq('id', uid);
+      return const Success(null);
+    } on PostgrestException catch (e) {
+      return Failure(e.message);
+    } catch (_) {
+      return const Failure('Failed to update name. Please try again.');
+    }
   }
 
-  Future<Result<void>> updateAvatar(String uid, String newPicturePath) async{
-    return Failure('Failed to update name. Please try again.');
+  Future<Result<void>> updateAvatar(String uid, Uint8List bytes, {String extension = 'png'}) async {
+    try {
+      final storage = StorageService(client: _client);
+      final result = await storage.uploadFile(bytes, directory: 'avatars', extension: extension);
+      final path = switch (result) {
+        Success<String>(:final data) => data,
+        Failure<String>(:final message) => throw Exception(message),
+      };
+      final publicUrl = storage.getPublicUrl(path);
+      await _client
+        .from('profiles')
+        .update({'avatar_url': publicUrl, 'updated_at': _now().toIso8601String()})
+        .eq('id', uid);
+      return const Success(null);
+    } on PostgrestException catch (e) {
+      return Failure(e.message);
+    } catch (_) {
+      return const Failure('Failed to update avatar. Please try again.');
+    }
   }
+
 }
