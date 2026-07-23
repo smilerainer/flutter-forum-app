@@ -8,6 +8,7 @@ class DebugConsole extends StatefulWidget {
 
 class _DebugConsoleState extends State<DebugConsole> {
   final List<String> _log = [];
+  // ignore: unused_field
   bool _busy = false;
 
   String? lastUploadPath;
@@ -50,6 +51,7 @@ class _DebugConsoleState extends State<DebugConsole> {
   }
 }
 
+// ignore: library_private_types_in_public_api
 List<Widget> buttons(_DebugConsoleState s) => [
 
     ];

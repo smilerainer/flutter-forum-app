@@ -1,8 +1,7 @@
-import 'dart:typed_data';
+
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:forum_app/core/result.dart';
 import 'package:forum_app/features/profile/data/profile_service.dart';
@@ -76,6 +75,7 @@ class _DebugConsoleState extends State<DebugConsole> {
   }
 }
 
+// ignore: library_private_types_in_public_api
 List<Widget> buttons(_DebugConsoleState s) => [
       ElevatedButton(
         onPressed: s._busy
@@ -102,7 +102,7 @@ List<Widget> buttons(_DebugConsoleState s) => [
                   final service = ProfileService();
                   final updateResult = await service.updateProfile(s._lastFetchedUid!, newName);
                   if (updateResult is Failure) {
-                    throw Exception((updateResult as Failure).message);
+                    throw Exception((updateResult).message);
                   }
                   final refetchResult = await service.fetchProfile(s._lastFetchedUid!);
                   return switch (refetchResult) {
@@ -125,7 +125,7 @@ List<Widget> buttons(_DebugConsoleState s) => [
                   final service = ProfileService();
                   final updateResult = await service.updateAvatar(s._lastFetchedUid!, bytes, extension: ext);
                   if (updateResult is Failure) {
-                    throw Exception((updateResult as Failure).message);
+                    throw Exception((updateResult).message);
                   }
                   final refetchResult = await service.fetchProfile(s._lastFetchedUid!);
                   return switch (refetchResult) {

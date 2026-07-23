@@ -56,6 +56,7 @@ class _DebugConsoleState extends State<DebugConsole> {
   }
 }
 
+// ignore: library_private_types_in_public_api
 List<Widget> buttons(_DebugConsoleState s) => [
       ElevatedButton(
         onPressed: s._busy
