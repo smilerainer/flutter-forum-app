@@ -11,6 +11,7 @@ import 'package:forum_app/features/profile/data/user_profile.dart';
 
 // ---------- Postgrest chain fakes ----------
 
+// ignore: must_be_immutable
 class FakeTransform extends Mock implements PostgrestTransformBuilder<Map<String, dynamic>?> {
   Map<String, dynamic>? _data;
   Object? _error;
@@ -42,6 +43,7 @@ class FakeFilterSelect extends Mock implements PostgrestFilterBuilder<List<Map<S
   FakeTransform maybeSingle() => _transform;
 }
 
+// ignore: must_be_immutable
 class FakeFilterUpdate extends Mock implements PostgrestFilterBuilder<dynamic> {
   dynamic _eqError;
 
@@ -108,6 +110,7 @@ class FakeSupabaseClient extends Mock implements SupabaseClient {
   SupabaseStorageClient get storage => storageClient;
 
   @override
+  // ignore: unnecessary_no_such_method
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
