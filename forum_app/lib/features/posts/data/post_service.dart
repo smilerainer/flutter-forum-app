@@ -109,6 +109,22 @@ class PostService {
     }
   }
 
+  Future<Result<Post>> getPost(String postId) async {
+    try {
+      final post = await _client
+          .from('posts')
+          .select('*, profiles(id, display_name, avatar_url, created_at), post_images(id, storage_path, position)')
+          .eq('id', postId)
+          .single();
+
+      return Success<Post>(Post.fromJson(post));
+    } on PostgrestException catch (e) {
+      return Failure<Post>(e.message);
+    } catch (e) {
+      return Failure<Post>(e.toString());
+    }
+  }
+
   Future<Result<void>> deletePost(String postId) async {
     try {
       final images = await _client
