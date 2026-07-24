@@ -14,6 +14,15 @@ class CommentsServicePanel extends StatefulWidget {
 
   const CommentsServicePanel({super.key, required this.onRun, required this.busy});
 
+  // Test keys — not visible in the UI
+  static const uuidFieldKey = Key('comment_uuid_field');
+  static const getPostBtnKey = Key('comment_get_post_btn');
+  static const fetchCommentsBtnKey = Key('comment_fetch_comments_btn');
+  static const createCommentBtnKey = Key('comment_create_btn');
+  static const attachImagesBtnKey = Key('comment_attach_images_btn');
+  static const listUrlsBtnKey = Key('comment_list_urls_btn');
+  static const deleteBtnKey = Key('comment_delete_btn');
+
   @override
   State<CommentsServicePanel> createState() => _CommentsServicePanelState();
 }
@@ -37,6 +46,7 @@ class _CommentsServicePanelState extends State<CommentsServicePanel>
         SizedBox(
           width: 400,
           child: TextField(
+            key: CommentsServicePanel.uuidFieldKey,
             controller: _uuidController,
             decoration: const InputDecoration(
               border: OutlineInputBorder(),
@@ -45,6 +55,7 @@ class _CommentsServicePanelState extends State<CommentsServicePanel>
           ),
         ),
         ElevatedButton(
+          key: CommentsServicePanel.getPostBtnKey,
           onPressed: widget.busy
               ? null
               : () => widget.onRun('Get Post', () async {
@@ -62,6 +73,7 @@ class _CommentsServicePanelState extends State<CommentsServicePanel>
           child: const Text('Get Post'),
         ),
         ElevatedButton(
+          key: CommentsServicePanel.fetchCommentsBtnKey,
           onPressed: widget.busy
               ? null
               : () => widget.onRun('Fetch Comments', () async {
@@ -82,6 +94,7 @@ class _CommentsServicePanelState extends State<CommentsServicePanel>
           child: const Text('Fetch Comments'),
         ),
         ElevatedButton(
+          key: CommentsServicePanel.createCommentBtnKey,
           onPressed: (widget.busy || _lastPostUuid == null)
               ? null
               : () => widget.onRun('Create Comment', () async {
@@ -99,6 +112,7 @@ class _CommentsServicePanelState extends State<CommentsServicePanel>
           child: const Text('Create Comment'),
         ),
         ElevatedButton(
+          key: CommentsServicePanel.attachImagesBtnKey,
           onPressed: (widget.busy || _lastCreatedCommentId == null)
               ? null
               : () => widget.onRun('Attach Images to Comment', () async {
@@ -130,6 +144,7 @@ class _CommentsServicePanelState extends State<CommentsServicePanel>
           child: const Text('Attach Images to Comment'),
         ),
         ElevatedButton(
+          key: CommentsServicePanel.listUrlsBtnKey,
           onPressed: (widget.busy || _lastCreatedCommentId == null)
               ? null
               : () => widget.onRun('List Comment Image URLs', () async {
@@ -158,6 +173,7 @@ class _CommentsServicePanelState extends State<CommentsServicePanel>
           child: const Text('List Comment Image URLs'),
         ),
         ElevatedButton(
+          key: CommentsServicePanel.deleteBtnKey,
           onPressed: (widget.busy || _lastCreatedCommentId == null)
               ? null
               : () => widget.onRun('Delete Last Comment', () async {

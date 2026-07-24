@@ -11,6 +11,15 @@ class PostServicePanel extends StatefulWidget {
 
   const PostServicePanel({super.key, required this.onRun, required this.busy});
 
+  // Test keys — not visible in the UI
+  static const titleFieldKey = Key('post_title_field');
+  static const bodyFieldKey = Key('post_body_field');
+  static const createBtnKey = Key('post_create_btn');
+  static const fetchBtnKey = Key('post_fetch_btn');
+  static const updateBtnKey = Key('post_update_btn');
+  static const attachImagesBtnKey = Key('post_attach_images_btn');
+  static const deleteBtnKey = Key('post_delete_btn');
+
   @override
   State<PostServicePanel> createState() => _PostServicePanelState();
 }
@@ -33,6 +42,7 @@ class _PostServicePanelState extends State<PostServicePanel>
 
   List<Widget> get buttons => [
         ElevatedButton(
+          key: PostServicePanel.fetchBtnKey,
           onPressed: widget.busy
               ? null
               : () => widget.onRun('Fetch Posts', () async {
@@ -48,6 +58,7 @@ class _PostServicePanelState extends State<PostServicePanel>
           child: const Text('Fetch Posts'),
         ),
         ElevatedButton(
+          key: PostServicePanel.createBtnKey,
           onPressed: widget.busy
               ? null
               : () => widget.onRun('Create Post', () async {
@@ -66,6 +77,7 @@ class _PostServicePanelState extends State<PostServicePanel>
           child: const Text('Create Post'),
         ),
         ElevatedButton(
+          key: PostServicePanel.attachImagesBtnKey,
           onPressed:
               (widget.busy || _lastCreatedPostId == null) ? null : () => widget.onRun('Attach Images', () async {
                     final picker = ImagePicker();
@@ -98,6 +110,7 @@ class _PostServicePanelState extends State<PostServicePanel>
           child: const Text('Attach Images to Last Post'),
         ),
         ElevatedButton(
+          key: PostServicePanel.updateBtnKey,
           onPressed:
               (widget.busy || _lastCreatedPostId == null) ? null : () => widget.onRun('Update Last Post', () async {
                     final title = _titleController.text.trim();
@@ -117,6 +130,7 @@ class _PostServicePanelState extends State<PostServicePanel>
           child: const Text('Update Last Post'),
         ),
         ElevatedButton(
+          key: PostServicePanel.deleteBtnKey,
           onPressed:
               (widget.busy || _lastCreatedPostId == null) ? null : () => widget.onRun('Delete Last Created', () async {
                     final service = PostService();
@@ -142,6 +156,7 @@ class _PostServicePanelState extends State<PostServicePanel>
       child: Column(
         children: [
           TextField(
+            key: PostServicePanel.titleFieldKey,
             controller: _titleController,
             decoration: const InputDecoration(
               hintText: 'Title',
@@ -151,6 +166,7 @@ class _PostServicePanelState extends State<PostServicePanel>
           ),
           const SizedBox(height: 8),
           TextField(
+            key: PostServicePanel.bodyFieldKey,
             controller: _bodyController,
             decoration: const InputDecoration(
               hintText: 'Body (optional)',

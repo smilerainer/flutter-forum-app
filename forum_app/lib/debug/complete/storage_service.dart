@@ -12,6 +12,13 @@ class StorageServicePanel extends StatefulWidget {
 
   const StorageServicePanel({super.key, required this.onRun, required this.busy});
 
+  // Test keys — not visible in the UI
+  static const uploadBtnKey = Key('storage_upload_btn');
+  static const getUrlBtnKey = Key('storage_get_url_btn');
+  static const deleteBtnKey = Key('storage_delete_btn');
+  static const batchUploadBtnKey = Key('storage_batch_upload_btn');
+  static const batchDeleteBtnKey = Key('storage_batch_delete_btn');
+
   @override
   State<StorageServicePanel> createState() => _StorageServicePanelState();
 }
@@ -26,6 +33,7 @@ class _StorageServicePanelState extends State<StorageServicePanel>
 
   List<Widget> get buttons => [
         ElevatedButton(
+          key: StorageServicePanel.uploadBtnKey,
           onPressed: widget.busy
               ? null
               : () => widget.onRun('Upload', () async {
@@ -46,6 +54,7 @@ class _StorageServicePanelState extends State<StorageServicePanel>
           child: const Text('Test: Upload Image'),
         ),
         ElevatedButton(
+          key: StorageServicePanel.getUrlBtnKey,
           onPressed: (widget.busy || lastUploadPath == null)
               ? null
               : () => widget.onRun('Get Public URL', () async {
@@ -55,6 +64,7 @@ class _StorageServicePanelState extends State<StorageServicePanel>
           child: const Text('Test: Get Public URL'),
         ),
         ElevatedButton(
+          key: StorageServicePanel.deleteBtnKey,
           onPressed: (widget.busy || lastUploadPath == null)
               ? null
               : () => widget.onRun('Delete', () async {
@@ -69,6 +79,7 @@ class _StorageServicePanelState extends State<StorageServicePanel>
           child: const Text('Test: Delete Recent'),
         ),
         ElevatedButton(
+          key: StorageServicePanel.batchUploadBtnKey,
           onPressed: widget.busy
               ? null
               : () => widget.onRun('Batch Upload', () async {
@@ -96,6 +107,7 @@ class _StorageServicePanelState extends State<StorageServicePanel>
           child: const Text('Test: Batch Upload (3)'),
         ),
         ElevatedButton(
+          key: StorageServicePanel.batchDeleteBtnKey,
           onPressed: (widget.busy || lastBatchPaths == null)
               ? null
               : () => widget.onRun('Batch Delete', () async {

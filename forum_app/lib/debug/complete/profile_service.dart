@@ -11,6 +11,12 @@ class ProfileServicePanel extends StatefulWidget {
 
   const ProfileServicePanel({super.key, required this.onRun, required this.busy});
 
+  // Test keys — not visible in the UI
+  static const textFieldKey = Key('profile_text_field');
+  static const fetchBtnKey = Key('profile_fetch_btn');
+  static const updateNameBtnKey = Key('profile_update_name_btn');
+  static const updateAvatarBtnKey = Key('profile_update_avatar_btn');
+
   @override
   State<ProfileServicePanel> createState() => _ProfileServicePanelState();
 }
@@ -31,6 +37,7 @@ class _ProfileServicePanelState extends State<ProfileServicePanel>
 
   List<Widget> get buttons => [
         ElevatedButton(
+          key: ProfileServicePanel.fetchBtnKey,
           onPressed: widget.busy
               ? null
               : () => widget.onRun('Fetch Profile', () async {
@@ -47,6 +54,7 @@ class _ProfileServicePanelState extends State<ProfileServicePanel>
           child: const Text('Fetch Profile by UID'),
         ),
         ElevatedButton(
+          key: ProfileServicePanel.updateNameBtnKey,
           onPressed: (widget.busy || _lastFetchedUid == null)
               ? null
               : () => widget.onRun('Update Name', () async {
@@ -66,6 +74,7 @@ class _ProfileServicePanelState extends State<ProfileServicePanel>
           child: const Text('Update Name for Last Fetched UID'),
         ),
         ElevatedButton(
+          key: ProfileServicePanel.updateAvatarBtnKey,
           onPressed: (widget.busy || _lastFetchedUid == null)
               ? null
               : () => widget.onRun('Update Avatar', () async {
@@ -97,6 +106,7 @@ class _ProfileServicePanelState extends State<ProfileServicePanel>
       child: Column(
         children: [
           TextField(
+            key: ProfileServicePanel.textFieldKey,
             controller: _textController,
             decoration: const InputDecoration(
               hintText: 'Enter UID or name...',
