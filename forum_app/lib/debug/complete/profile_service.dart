@@ -87,7 +87,7 @@ List<Widget> buttons(_DebugConsoleState s) => [
                   final result = await service.fetchProfile(uid);
                   if (result is Success<UserProfile>) {
                     s._lastFetchedUid = uid;
-                    return '${result.data.displayName} / ${result.data.avatarUrl ?? 'none'}';
+                     return '${result.data.displayName ?? 'Anonymous'} / ${result.data.avatarUrl ?? 'none'}';
                   }
                   throw Exception((result as Failure<UserProfile>).message);
                 }),
@@ -106,7 +106,7 @@ List<Widget> buttons(_DebugConsoleState s) => [
                   }
                   final refetchResult = await service.fetchProfile(s._lastFetchedUid!);
                   return switch (refetchResult) {
-                    Success<UserProfile>(:final data) => data.displayName,
+                     Success<UserProfile>(:final data) => data.displayName ?? 'Anonymous',
                     Failure<UserProfile>(:final message) =>
                       throw Exception(message),
                   };

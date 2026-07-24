@@ -9,11 +9,19 @@ class ImageRef {
     required this.position,
   });
 
-  factory ImageRef.fromJson(Map<String, dynamic> json) => ImageRef(
-    id: json['id'] as String,
-    storagePath: json['storage_path'] as String,
-    position: json['position'] as int,
-  );
+  factory ImageRef.fromJson(Map<String, dynamic> json) {
+    final id = json['id'] as String?;
+    final storagePath = json['storage_path'] as String?;
+    final position = json['position'] as int?;
+    if (id == null || storagePath == null || position == null) {
+      throw const FormatException('Missing required image fields');
+    }
+    return ImageRef(
+      id: id,
+      storagePath: storagePath,
+      position: position,
+    );
+  }
 
   Map<String, dynamic> toJson() => {
     'id': id,

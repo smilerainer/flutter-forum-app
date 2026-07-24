@@ -23,10 +23,12 @@ class ProfileService {
       .maybeSingle() as Map<String, dynamic>;
       return Success(UserProfile(
         id: uid,
-        displayName: raw['display_name'],
-        avatarUrl: raw['avatar_url'],
+        displayName: raw['display_name'] as String?,
+        avatarUrl: raw['avatar_url'] as String?,
         createdAt: DateTime.parse(raw['created_at'] as String),
-        updatedAt: DateTime.parse(raw['updated_at'] as String),
+        updatedAt: raw['updated_at'] != null
+            ? DateTime.parse(raw['updated_at'] as String)
+            : null,
       ));
     } on PostgrestException catch(e){
       return Failure(e.message);

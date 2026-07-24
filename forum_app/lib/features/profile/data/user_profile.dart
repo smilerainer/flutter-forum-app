@@ -1,6 +1,6 @@
 class UserProfile {
     final String id;
-    final String displayName;
+    final String? displayName;
     final String? avatarUrl;
 
     final DateTime createdAt;
@@ -8,21 +8,35 @@ class UserProfile {
 
     const UserProfile ({
       required this.id,
-      required this.displayName,
-      required this.avatarUrl,
+      this.displayName,
+      this.avatarUrl,
 
       required this.createdAt,
-      required this.updatedAt,
+      this.updatedAt,
     });
 
-    factory UserProfile.fromJson(Map<String, dynamic> json) => UserProfile(
-      id: json['id'] as String,
-      displayName: json['display_name'] as String,
-      avatarUrl: json['avatar_url'] as String,
+  factory UserProfile.fromJson(Map<String, dynamic> json) {
+    final rawId = json['id'];
+    final rawCreatedAt = json['created_at'];
+    if (rawId == null || rawCreatedAt == null) return _empty();
+    return UserProfile(
+      id: rawId as String,
+      displayName: json['display_name'] as String?,
+      avatarUrl: json['avatar_url'] as String?,
 
-      createdAt: json['created_at'] as DateTime,
-      updatedAt: json['updated_at'] as DateTime,
+      createdAt: DateTime.parse(rawCreatedAt as String),
+      updatedAt: json['updated_at'] != null
+          ? DateTime.parse(json['updated_at'] as String)
+          : null,
     );
+  }
+  static UserProfile _empty() => UserProfile(
+    id: '',
+    displayName: null,
+    avatarUrl: null,
+    createdAt: DateTime.fromMillisecondsSinceEpoch(0),
+    updatedAt: null,
+  );
     Map<String, dynamic> toJson() => {
       'id': id,
       'display_name': displayName,

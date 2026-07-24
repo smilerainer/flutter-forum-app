@@ -17,7 +17,7 @@ class PostService {
     try {
       var query = _client
           .from('posts')
-          .select('*, profiles(display_name, avatar_url), post_images(id, storage_path, position)');
+          .select('*, profiles(id, display_name, avatar_url, created_at), post_images(id, storage_path, position)');
 
       if (cursor != null) {
         query = query.lt('created_at', cursor);
@@ -43,7 +43,7 @@ class PostService {
     } on PostgrestException catch (e) {
       return Failure<PaginatedResult<Post>>(e.message);
     } catch (e) {
-      return const Failure<PaginatedResult<Post>>('Failed to fetch posts. Please try again.');
+      return Failure<PaginatedResult<Post>>(e.toString());
     }
   }
 

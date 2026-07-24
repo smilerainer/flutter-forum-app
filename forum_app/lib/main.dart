@@ -1,5 +1,3 @@
-import 'package:flutter_skill/flutter_skill.dart';
-import 'package:flutter/foundation.dart'; // For kDebugMode
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
