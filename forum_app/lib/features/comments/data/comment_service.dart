@@ -109,7 +109,11 @@ class CommentService {
         }
       }
 
-      await _client.from('comments').delete().eq('id', commentId);
+      final result = await _client.from('comments').delete().eq('id', commentId).select('id');
+
+      if ((result as List).isEmpty) {
+        return const Failure('You are not authorized to modify this resource.');
+      }
 
       return const Success(null);
     } on PostgrestException catch (e) {

@@ -58,6 +58,7 @@ class _CompleteDebugConsoleState extends State<CompleteDebugConsole>
       body: Column(
         children: [
           Expanded(
+            flex: 2,
             child: TabBarView(
               controller: _tabController,
               children: [
@@ -69,8 +70,8 @@ class _CompleteDebugConsoleState extends State<CompleteDebugConsole>
             ),
           ),
           const Divider(),
-          SizedBox(
-            height: 200,
+          Expanded(
+            flex: 1,
             child: ListView(
               reverse: true,
               children: _log

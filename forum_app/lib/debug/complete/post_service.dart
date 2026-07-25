@@ -3,6 +3,7 @@ import 'package:image_picker/image_picker.dart';
 
 import 'package:forum_app/core/data/storage_service.dart';
 import 'package:forum_app/core/result.dart';
+import 'package:forum_app/features/posts/data/post.dart';
 import 'package:forum_app/features/posts/data/post_service.dart';
 
 class PostServicePanel extends StatefulWidget {
@@ -14,8 +15,10 @@ class PostServicePanel extends StatefulWidget {
   // Test keys — not visible in the UI
   static const titleFieldKey = Key('post_title_field');
   static const bodyFieldKey = Key('post_body_field');
+  static const postUuidFieldKey = Key('post_uuid_field');
   static const createBtnKey = Key('post_create_btn');
   static const fetchBtnKey = Key('post_fetch_btn');
+  static const getPostBtnKey = Key('post_get_btn');
   static const updateBtnKey = Key('post_update_btn');
   static const attachImagesBtnKey = Key('post_attach_images_btn');
   static const deleteBtnKey = Key('post_delete_btn');
@@ -28,12 +31,14 @@ class _PostServicePanelState extends State<PostServicePanel>
     with AutomaticKeepAliveClientMixin {
   final _titleController = TextEditingController();
   final _bodyController = TextEditingController();
+  final _postUuidController = TextEditingController();
   String? _lastCreatedPostId;
 
   @override
   void dispose() {
     _titleController.dispose();
     _bodyController.dispose();
+    _postUuidController.dispose();
     super.dispose();
   }
 
@@ -47,15 +52,35 @@ class _PostServicePanelState extends State<PostServicePanel>
               ? null
               : () => widget.onRun('Fetch Posts', () async {
                     final service = PostService();
-                    final result = await service.fetchPosts(limit: 10);
+                    final result = await service.fetchPosts(limit: 5);
                     return switch (result) {
-                      Success<dynamic>(:final data) =>
-                        '${data.items.length} posts${data.items.isNotEmpty ? ', first: ${data.items.first.title}' : ''}',
+                      Success<dynamic>(:final data) => data.items.map((p) =>
+                        'id: ${p.id}, author: ${p.author?.displayName ?? '(anon)'}, title: ${p.title}',
+                      ).join('\n'),
                       Failure<dynamic>(:final message) =>
                         throw Exception(message),
                     };
                   }),
           child: const Text('Fetch Posts'),
+        ),
+        ElevatedButton(
+          key: PostServicePanel.getPostBtnKey,
+          onPressed: widget.busy
+              ? null
+              : () => widget.onRun('Get Post', () async {
+                    final uuid = _postUuidController.text.trim();
+                    if (uuid.isEmpty) throw Exception('Enter a UUID in the field.');
+                    final service = PostService();
+                    final result = await service.getPost(uuid);
+                    return switch (result) {
+                      Success<Post>(:final data) => () {
+                        _lastCreatedPostId = uuid;
+                        return 'id: ${data.id}, author: ${data.author?.displayName ?? '(anon)'}, title: ${data.title}';
+                      }(),
+                      Failure<Post>(:final message) => throw Exception(message),
+                    };
+                  }),
+          child: const Text('Get Post'),
         ),
         ElevatedButton(
           key: PostServicePanel.createBtnKey,
@@ -174,6 +199,16 @@ class _PostServicePanelState extends State<PostServicePanel>
               isDense: true,
             ),
             maxLines: 2,
+          ),
+          const SizedBox(height: 8),
+          TextField(
+            key: PostServicePanel.postUuidFieldKey,
+            controller: _postUuidController,
+            decoration: const InputDecoration(
+              hintText: 'Post UUID',
+              border: OutlineInputBorder(),
+              isDense: true,
+            ),
           ),
           const SizedBox(height: 8),
           Wrap(spacing: 8, runSpacing: 8, children: buttons),

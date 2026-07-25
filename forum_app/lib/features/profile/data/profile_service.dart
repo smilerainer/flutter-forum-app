@@ -39,10 +39,16 @@ class ProfileService {
 
   Future<Result<void>> updateProfile(String uid, String newName) async {
     try {
-      await _client
+      final result = await _client
         .from('profiles')
         .update({'display_name': newName, 'updated_at': _now().toIso8601String()})
-        .eq('id', uid);
+        .eq('id', uid)
+        .select('id');
+
+      if ((result as List).isEmpty) {
+        return const Failure('You are not authorized to modify this resource.');
+      }
+
       return const Success(null);
     } on PostgrestException catch (e) {
       return Failure(e.message);
@@ -60,10 +66,16 @@ class ProfileService {
         Failure<String>(:final message) => throw Exception(message),
       };
       final publicUrl = storage.getPublicUrl(path);
-      await _client
+      final updateResult = await _client
         .from('profiles')
         .update({'avatar_url': publicUrl, 'updated_at': _now().toIso8601String()})
-        .eq('id', uid);
+        .eq('id', uid)
+        .select('id');
+
+      if ((updateResult as List).isEmpty) {
+        return const Failure('You are not authorized to modify this resource.');
+      }
+
       return const Success(null);
     } on PostgrestException catch (e) {
       return Failure(e.message);

@@ -92,14 +92,19 @@ class PostService {
 
   Future<Result<void>> updatePost(String postId, String title, String? body) async {
     try {
-      await _client
+      final result = await _client
           .from('posts')
           .update({
             'title': title,
             'body': body,
             'updated_at': _now().toIso8601String(),
           })
-          .eq('id', postId);
+          .eq('id', postId)
+          .select('id');
+
+      if ((result as List).isEmpty) {
+        return const Failure('You are not authorized to modify this resource.');
+      }
 
       return const Success(null);
     } on PostgrestException catch (e) {
@@ -140,7 +145,11 @@ class PostService {
         }
       }
 
-      await _client.from('posts').delete().eq('id', postId);
+      final result = await _client.from('posts').delete().eq('id', postId).select('id');
+
+      if ((result as List).isEmpty) {
+        return const Failure('You are not authorized to modify this resource.');
+      }
 
       return const Success(null);
     } on PostgrestException catch (e) {
