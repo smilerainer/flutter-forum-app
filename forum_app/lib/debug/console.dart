@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:forum_app/features/posts/presentation/screens/post_create_screen.dart';
 
 class DebugConsole extends StatefulWidget {
   const DebugConsole({super.key});
@@ -53,5 +54,10 @@ class _DebugConsoleState extends State<DebugConsole> {
 
 // ignore: library_private_types_in_public_api
 List<Widget> buttons(_DebugConsoleState s) => [
-
+      ElevatedButton(
+        onPressed: () => Navigator.of(s.context).push(
+          MaterialPageRoute(builder: (_) => const PostCreateScreen()),
+        ),
+        child: const Text('Open Post Create'),
+      ),
     ];
