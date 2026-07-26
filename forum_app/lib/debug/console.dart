@@ -1,9 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:forum_app/core/result.dart';
-import 'package:forum_app/features/posts/data/paginated_result.dart';
-import 'package:forum_app/features/posts/data/post.dart';
-import 'package:forum_app/features/posts/data/post_service.dart';
-import 'package:forum_app/features/posts/presentation/screens/post_detail_screen.dart';
 
 class DebugConsole extends StatefulWidget {
   const DebugConsole({super.key});
@@ -13,11 +8,11 @@ class DebugConsole extends StatefulWidget {
 
 class _DebugConsoleState extends State<DebugConsole> {
   final List<String> _log = [];
+  // ignore: unused_field
   bool _busy = false;
 
-  final PostService _postService = PostService();
-  final List<Post> _posts = [];
-  Post? _selectedPost;
+  String? lastUploadPath;
+  List<String>? lastBatchPaths;
 
   Future<void> run(String label, Future<String> Function() action) async {
     setState(() => _busy = true);
@@ -31,69 +26,12 @@ class _DebugConsoleState extends State<DebugConsole> {
     }
   }
 
-  Future<void> _fetchPosts() async {
-    await run('Fetch Posts', () async {
-      final result = await _postService.fetchPosts(limit: 20);
-      return switch (result) {
-        Success<PaginatedResult<Post>>(:final data) => () {
-          setState(() {
-            _posts
-              ..clear()
-              ..addAll(data.items);
-            _selectedPost = _posts.isNotEmpty ? _posts.first : null;
-          });
-          return '${data.items.length} posts loaded';
-        }(),
-        Failure<PaginatedResult<Post>>(:final message) =>
-          throw Exception(message),
-      };
-    });
-  }
-
-  void _openDetail() {
-    if (_selectedPost == null) return;
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => PostDetailScreen(postId: _selectedPost!.id),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('DEBUG CONSOLE')),
       body: Column(children: [
-        Wrap(spacing: 8, runSpacing: 8, children: [
-          ElevatedButton(
-            onPressed: _busy ? null : _fetchPosts,
-            child: const Text('Fetch Posts'),
-          ),
-          ElevatedButton(
-            onPressed: (_busy || _selectedPost == null) ? null : _openDetail,
-            child: const Text('Open Post Detail'),
-          ),
-        ]),
-        if (_posts.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: DropdownButton<Post>(
-              value: _selectedPost,
-              isExpanded: true,
-              hint: const Text('Select a post'),
-              items: _posts.map((p) => DropdownMenuItem(
-                value: p,
-                child: Text(
-                  '${p.title} (${p.images.length} img)',
-                  overflow: TextOverflow.ellipsis,
-                ),
-              )).toList(),
-              onChanged: (post) {
-                if (post != null) setState(() => _selectedPost = post);
-              },
-            ),
-          ),
+        Wrap(spacing: 8, runSpacing: 8, children: buttons(this)),
         const Divider(),
         Expanded(
           child: ListView(
@@ -112,3 +50,8 @@ class _DebugConsoleState extends State<DebugConsole> {
     );
   }
 }
+
+// ignore: library_private_types_in_public_api
+List<Widget> buttons(_DebugConsoleState s) => [
+
+    ];
