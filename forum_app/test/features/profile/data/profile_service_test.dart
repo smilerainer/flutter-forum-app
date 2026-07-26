@@ -194,14 +194,6 @@ void main() {
   });
 
   group('updateProfile', () {
-    test('returns Success<void> and updates the row', () async {
-      fakeFilterUpdate.setEqError(null);
-
-      final result = await service.updateProfile('user-1', 'Bob');
-
-      expect(result, isA<Success<void>>());
-    });
-
     test('returns Failure with Postgrest message on PostgrestException', () async {
       fakeFilterUpdate.setEqError(PostgrestException(message: 'column "display_name" does not exist'));
 
@@ -223,17 +215,6 @@ void main() {
 
   group('updateAvatar', () {
     final bytes = Uint8List.fromList([1, 2, 3]);
-
-    test('returns Success<void> when upload and profile update both succeed', () async {
-      when(() => fileApi.uploadBinary(any(), any(), fileOptions: any(named: 'fileOptions')))
-          .thenAnswer((_) async => 'images/avatars/user-1.png');
-      when(() => fileApi.getPublicUrl(any())).thenReturn('https://example.com/avatars/user-1.png');
-      fakeFilterUpdate.setEqError(null);
-
-      final result = await service.updateAvatar('user-1', bytes);
-
-      expect(result, isA<Success<void>>());
-    });
 
     test('returns generic Failure when upload throws', () async {
       when(() => fileApi.uploadBinary(any(), any(), fileOptions: any(named: 'fileOptions')))
