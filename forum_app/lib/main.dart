@@ -9,6 +9,9 @@ import 'package:forum_app/features/auth/data/auth_service.dart';
 import 'package:forum_app/features/auth/logic/auth_view_model.dart';
 import 'package:forum_app/router.dart';
 
+final _rootNavigatorKey = GlobalKey<NavigatorState>();
+
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   if (kDebugMode) {
@@ -20,7 +23,7 @@ Future<void> main() async {
   );
 
   final authViewModel = AuthViewModel(AuthService());
-  final router = buildRouter(authViewModel);
+  final router = buildRouter(authViewModel, navigatorKey: _rootNavigatorKey);
 
   runApp(MyApp(authViewModel: authViewModel, router: router));
 }

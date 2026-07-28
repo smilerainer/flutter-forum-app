@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:forum_app/debug/console.dart';
 import 'package:forum_app/debug/complete/index.dart';
 import 'package:go_router/go_router.dart';
@@ -24,8 +25,9 @@ String? authRedirect({required bool loggedIn, required String matchedLocation}) 
   return null;
 }
 
-GoRouter buildRouter(AuthViewModel authViewModel) {
+GoRouter buildRouter(AuthViewModel authViewModel, {GlobalKey<NavigatorState>? navigatorKey}) {
   return GoRouter(
+    navigatorKey: navigatorKey,
     initialLocation: '/posts',
     refreshListenable: authViewModel,
     routes: [
