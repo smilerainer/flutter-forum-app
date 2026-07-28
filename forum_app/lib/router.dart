@@ -33,8 +33,15 @@ GoRouter buildRouter(AuthViewModel authViewModel, {GlobalKey<NavigatorState>? na
     routes: [
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(path: '/register', builder: (context, state) => const RegisterScreen()),
-      GoRoute(path: '/posts', builder: (context, state) => const PostListScreen()),
-      GoRoute(path: '/posts/create', builder: (context, state) => const PostCreateScreen()),
+      GoRoute(
+        path: '/posts/create',
+        builder: (context, state) => const PostCreateScreen(),
+      ),
+      GoRoute(
+        path: '/posts/:id/edit',
+        builder: (context, state) =>
+            PostEditScreen(postId: state.pathParameters['id']!),
+      ),
       GoRoute(
         path: '/posts/:id',
         builder: (context, state) =>
@@ -44,9 +51,8 @@ GoRouter buildRouter(AuthViewModel authViewModel, {GlobalKey<NavigatorState>? na
             ),
       ),
       GoRoute(
-        path: '/posts/:id/edit',
-        builder: (context, state) =>
-            PostEditScreen(postId: state.pathParameters['id']!),
+        path: '/posts',
+        builder: (context, state) => const PostListScreen(),
       ),
       if (kDebugMode) GoRoute(path: '/debug', builder: ((context, state) => const DebugConsole())),
       if (kDebugMode) GoRoute(path: '/debug/complete', builder: ((context, state) => const CompleteDebugConsole()))

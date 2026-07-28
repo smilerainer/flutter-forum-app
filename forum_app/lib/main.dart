@@ -17,6 +17,7 @@ Future<void> main() async {
   if (kDebugMode) {
     FlutterSkillBinding.ensureInitialized();
   }
+  GoRouter.optionURLReflectsImperativeAPIs = true;
   await Supabase.initialize(
     url: Env.supabaseUrl,
     publishableKey: Env.supabasePublishableKey,
