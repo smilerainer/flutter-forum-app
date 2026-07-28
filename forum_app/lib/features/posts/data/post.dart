@@ -56,14 +56,20 @@ class Post {
       createdAt: DateTime.parse(createdAtStr),
       updatedAt: DateTime.parse(updatedAtStr),
       commentCount: (json['comments'] as List<dynamic>?)?.length ?? 0,
-      latestCommentBody: (json['comments'] as List<dynamic>?)
-          ?.firstOrNull
-          ?.let((c) => (c as Map<String, dynamic>)['body'] as String?),
-      latestCommentAuthorName: (json['comments'] as List<dynamic>?)
-          ?.firstOrNull
-          ?.let((c) => (c as Map<String, dynamic>)['profiles'] as Map<String, dynamic>?)
-          ?.let((p) => p['display_name'] as String?),
+      latestCommentBody: _firstField(json['comments'], 'body'),
+      latestCommentAuthorName: _firstNestedField(json['comments'], 'profiles', 'display_name'),
     );
+  }
+
+  static String? _firstField(List<dynamic>? list, String key) {
+    final first = list?.firstOrNull as Map<String, dynamic>?;
+    return first?[key] as String?;
+  }
+
+  static String? _firstNestedField(List<dynamic>? list, String parent, String key) {
+    final first = list?.firstOrNull as Map<String, dynamic>?;
+    final parentMap = first?[parent] as Map<String, dynamic>?;
+    return parentMap?[key] as String?;
   }
 
   Map<String, dynamic> toJson() => {
