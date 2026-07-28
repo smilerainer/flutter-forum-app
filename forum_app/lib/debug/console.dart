@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:forum_app/core/data/image_ref.dart';
 import 'package:forum_app/core/data/storage_service.dart';
 import 'package:forum_app/core/result.dart';
 import 'package:forum_app/features/posts/data/post.dart';
-import 'package:forum_app/features/posts/data/paginated_result.dart';
 import 'package:forum_app/features/posts/data/post_service.dart';
-import 'package:forum_app/features/posts/presentation/screens/post_edit_screen.dart';
+import 'package:forum_app/features/posts/logic/post_form_view_model.dart';
+import 'package:forum_app/features/posts/presentation/widgets/post_image_editor.dart';
 
 class DebugConsole extends StatefulWidget {
   const DebugConsole({super.key});
@@ -16,11 +19,12 @@ class _DebugConsoleState extends State<DebugConsole> {
   final List<String> _log = [];
   bool _busy = false;
 
-  final PostService _postService = PostService();
-  final StorageService _storageService = StorageService();
-  final List<Post> _posts = [];
-  Post? _selectedPost;
+  String? lastUploadPath;
+  List<String>? lastBatchPaths;
 
+  Post? lastEditPost;
+  PostImageEditorState? _editorState;
+  int _editorGeneration = 0;
   final _titleController = TextEditingController();
   final _bodyController = TextEditingController();
 
@@ -31,212 +35,258 @@ class _DebugConsoleState extends State<DebugConsole> {
     super.dispose();
   }
 
+  void log(String message) {
+    setState(() => _log.insert(0, message));
+  }
+
+  void logStep(String message) {
+    log('   • $message');
+  }
+
   Future<void> run(String label, Future<String> Function() action) async {
     setState(() => _busy = true);
+    log('▶ $label');
     try {
       final result = await action();
-      setState(() => _log.insert(0, '✅ $label → $result'));
+      log('✅ $label → $result');
     } catch (e) {
-      setState(() => _log.insert(0, '❌ $label → $e'));
+      log('❌ $label → $e');
     } finally {
       setState(() => _busy = false);
     }
   }
 
-  Future<void> _fetchPosts() async {
-    await run('Fetch Posts', () async {
-      final result = await _postService.fetchPosts(limit: 20);
-      return switch (result) {
-        Success<PaginatedResult<Post>>(:final data) => () {
-          setState(() {
-            _posts
-              ..clear()
-              ..addAll(data.items);
-            _selectedPost = _posts.isNotEmpty ? _posts.first : null;
-          });
-          return '${data.items.length} posts loaded';
-        }(),
-        Failure<PaginatedResult<Post>>(:final message) =>
-          throw Exception(message),
-      };
-    });
+  Future<void> _copyAll() async {
+    await Clipboard.setData(ClipboardData(text: _log.join('\n')));
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Log copied to clipboard')),
+    );
   }
 
-  void _openEdit() {
-    if (_selectedPost == null) return;
-    Navigator.push<Post>(
-      context,
-      MaterialPageRoute(
-        builder: (_) => PostEditScreen(post: _selectedPost!),
-      ),
-    ).then((refreshed) {
-      if (refreshed != null && mounted) {
-        setState(() {
-          _selectedPost = refreshed;
-          final idx = _posts.indexWhere((p) => p.id == refreshed.id);
-          if (idx >= 0) {
-            _posts[idx] = refreshed;
-          }
-        });
-        _log.insert(0, '✅ Edit returned → ${refreshed.title}');
-      }
-    });
-  }
+  Future<String> _createFixture() async {
+    final postService = PostService();
+    final storageService = StorageService();
 
-  Future<void> _removeImages() async {
-    if (_selectedPost == null) return;
-    final post = _selectedPost!;
-    if (post.images.isEmpty) {
-      await run('Remove Images', () async =>
-        throw Exception('No images on this post'));
-      return;
+    final createResult = await postService.createPost('Edit Fixture', 'original body');
+    if (createResult is Failure<String>) throw Exception(createResult.message);
+    final postId = (createResult as Success<String>).data;
+    logStep('Post created: $postId');
+
+    final picked = await ImagePicker().pickMultiImage();
+    if (picked.length != 2) {
+      throw Exception('Pick exactly 2 images to proceed (picked ${picked.length})');
+    }
+    final bytesList = await Future.wait(picked.map((f) => f.readAsBytes()));
+
+    final uploadResults = await storageService.uploadFileBatch(
+      bytesList,
+      directory: 'posts/$postId',
+      extension: 'jpg',
+    );
+    final paths = <String>[];
+    for (final r in uploadResults) {
+      if (r is Failure<String>) throw Exception('Upload failed: ${r.message}');
+      final path = (r as Success<String>).data;
+      paths.add(path);
+      logStep('Uploaded $path');
     }
 
-    await run('Remove All Images from "${post.title}"', () async {
-      // Delete storage files first
-      for (final img in post.images) {
-        final delResult = await _storageService.deleteFile(path: img.storagePath);
-        if (delResult is Failure<void>) {
-          return 'Storage delete failed: ${delResult.message}';
+    final attachResult = await postService.attachImages(postId, paths);
+    if (attachResult is Failure<void>) throw Exception(attachResult.message);
+    logStep('Attached ${paths.length} image(s)');
+
+    final refreshed = await postService.getPost(postId);
+    if (refreshed is Failure<Post>) throw Exception(refreshed.message);
+    final post = (refreshed as Success<Post>).data;
+    logStep('Refetched from server: ${post.images.length} image(s)');
+
+    setState(() {
+      lastEditPost = post;
+      _editorState = null;
+      _editorGeneration++;
+      _titleController.text = post.title;
+      _bodyController.text = post.body ?? '';
+    });
+
+    return 'postId=$postId, images=${post.images.length}';
+  }
+
+  Future<String> _submitEdit() async {
+    final post = lastEditPost!;
+    final postService = PostService();
+    final storageService = StorageService();
+
+    final removedIds = _editorState?.removedIds ?? <String>{};
+    final newImages = _editorState?.newImages ?? [];
+    final toRemove = post.images.where((img) => removedIds.contains(img.id)).toList();
+
+    if (toRemove.isNotEmpty) {
+      for (final img in toRemove) {
+        final result = await storageService.deleteFile(path: img.storagePath);
+        if (result is Failure<void>) {
+          throw Exception('Storage delete failed for ${img.storagePath}: ${result.message}');
         }
+        logStep('Deleted storage file ${img.storagePath}');
       }
-
-      // Remove post_images rows
-      final ids = post.images.map((i) => i.id).toList();
-      final removeResult = await _postService.removeImages(ids);
-      return switch (removeResult) {
-        Success<void> _ => '${ids.length} image(s) removed',
-        Failure<void>(:final message) => throw Exception(message),
-      };
-    });
-  }
-
-  Future<void> _updatePost() async {
-    if (_selectedPost == null) return;
-    final title = _titleController.text.trim();
-    if (title.isEmpty) {
-      await run('Update Post', () async =>
-        throw Exception('Enter a title first'));
-      return;
+      final removeResult = await postService.removeImages(toRemove.map((e) => e.id).toList());
+      if (removeResult is Failure<void>) throw Exception(removeResult.message);
+      logStep('Removed ${toRemove.length} post_images row(s)');
     }
-    final body = _bodyController.text.trim();
 
-    await run('Update "${_selectedPost!.title}"', () async {
-      final result = await _postService.updatePost(
-        _selectedPost!.id,
-        title,
-        body.isEmpty ? null : body,
+    if (newImages.isNotEmpty) {
+      final uploadResults = await storageService.uploadFileBatch(
+        newImages.map((e) => e.bytes).toList(),
+        directory: 'posts/${post.id}',
+        extension: 'jpg',
       );
-      return switch (result) {
-        Success<void> _ => 'Post updated',
-        Failure<void>(:final message) => throw Exception(message),
-      };
+      final paths = <String>[];
+      for (final r in uploadResults) {
+        if (r is Failure<String>) throw Exception('Upload failed: ${r.message}');
+        final path = (r as Success<String>).data;
+        paths.add(path);
+        logStep('Uploaded $path');
+      }
+      final attachResult = await postService.attachImages(post.id, paths);
+      if (attachResult is Failure<void>) throw Exception(attachResult.message);
+      logStep('Attached ${paths.length} new image(s)');
+    }
+
+    final title = _titleController.text.trim();
+    final body = _bodyController.text.trim();
+    final updateResult = await postService.updatePost(post.id, title, body.isEmpty ? null : body);
+    if (updateResult is Failure<void>) throw Exception(updateResult.message);
+    logStep('Post row updated');
+
+    final refreshed = await postService.getPost(post.id);
+    if (refreshed is Failure<Post>) throw Exception(refreshed.message);
+    final updated = (refreshed as Success<Post>).data;
+    logStep('Refetched from server: ${updated.images.length} image(s), title="${updated.title}"');
+
+    setState(() {
+      lastEditPost = updated;
+      _editorState = null;
+      _editorGeneration++;
+      _titleController.text = updated.title;
+      _bodyController.text = updated.body ?? '';
     });
+
+    return 'title="${updated.title}", images=${updated.images.length}';
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('DEBUG CONSOLE')),
-      body: Column(children: [
-        // Data operation buttons
-        Padding(
-          padding: const EdgeInsets.all(8),
-          child: Wrap(spacing: 8, runSpacing: 8, children: [
-            ElevatedButton(
-              onPressed: _busy ? null : _fetchPosts,
-              child: const Text('Fetch Posts'),
-            ),
-            ElevatedButton(
-              onPressed: (_busy || _selectedPost == null) ? null : _openEdit,
-              child: const Text('Open Edit Screen'),
-            ),
-            ElevatedButton(
-              onPressed: (_busy || _selectedPost == null) ? null : _removeImages,
-              child: const Text('Remove Images'),
-            ),
-          ]),
-        ),
-        // Post selector + update fields
-        if (_posts.isNotEmpty) ...[
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: DropdownButton<Post>(
-              value: _selectedPost,
-              isExpanded: true,
-              hint: const Text('Select a post'),
-              items: _posts.map((p) => DropdownMenuItem(
-                value: p,
-                child: Text(
-                  '${p.title} (${p.images.length} img)',
-                  overflow: TextOverflow.ellipsis,
-                ),
-              )).toList(),
-              onChanged: (post) {
-                if (post != null) {
-                  setState(() {
-                    _selectedPost = post;
-                    _titleController.text = post.title;
-                    _bodyController.text = post.body ?? '';
-                  });
-                }
-              },
-            ),
-          ),
-          const SizedBox(height: 8),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
+      body: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Wrap(spacing: 8, runSpacing: 8, children: buttons(this)),
+            if (_busy)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 8),
+                child: LinearProgressIndicator(),
+              ),
+            const Divider(),
+            if (lastEditPost != null) ...[
+              TextField(
+                controller: _titleController,
+                decoration: const InputDecoration(labelText: 'Title', border: OutlineInputBorder()),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: _bodyController,
+                decoration: const InputDecoration(labelText: 'Body', border: OutlineInputBorder()),
+                maxLines: 3,
+              ),
+              const SizedBox(height: 8),
+              PostImageEditor(
+                key: ValueKey('${lastEditPost!.id}_$_editorGeneration'),
+                existingImages: lastEditPost!.images,
+                onChanged: (state) => setState(() => _editorState = state),
+              ),
+              const SizedBox(height: 8),
+              FilledButton(
+                onPressed: _busy ? null : () => run('Submit Edit (live)', _submitEdit),
+                child: const Text('Submit Edit (live)'),
+              ),
+              const Divider(),
+            ],
+            Row(
               children: [
-                Expanded(
-                  child: TextField(
-                    controller: _titleController,
-                    decoration: const InputDecoration(
-                      hintText: 'New title',
-                      border: OutlineInputBorder(),
-                      isDense: true,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: TextField(
-                    controller: _bodyController,
-                    decoration: const InputDecoration(
-                      hintText: 'New body',
-                      border: OutlineInputBorder(),
-                      isDense: true,
-                    ),
-                    maxLines: 1,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                ElevatedButton(
-                  onPressed: _busy ? null : _updatePost,
-                  child: const Text('Update'),
+                const Text('LOG', style: TextStyle(fontWeight: FontWeight.bold)),
+                const Spacer(),
+                TextButton.icon(
+                  onPressed: _log.isEmpty ? null : () => _copyAll(),
+                  icon: const Icon(Icons.copy_all),
+                  label: const Text('Copy All'),
                 ),
               ],
             ),
-          ),
-        ],
-        const Divider(),
-        Expanded(
-          child: ListView(
-            children: _log
-                .map((l) => Padding(
-                      padding: const EdgeInsets.all(4),
-                      child: SelectableText(
-                        l,
-                        style: const TextStyle(
-                          fontFamily: 'monospace',
-                          fontSize: 12,
-                        ),
-                      ),
-                    ))
-                .toList(),
-          ),
+            Expanded(
+              child: SingleChildScrollView(
+                child: SelectableText(
+                  _log.join('\n'),
+                  style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
+                ),
+              ),
+            ),
+          ],
         ),
-      ]),
+      ),
     );
   }
 }
+
+// ignore: library_private_types_in_public_api
+List<Widget> buttons(_DebugConsoleState s) => [
+      ElevatedButton(
+        onPressed: s._busy
+            ? null
+            : () => s.run('Diff Images (pure logic)', () async {
+                  const imgA = ImageRef(id: 'A', storagePath: 'a.jpg', position: 0);
+                  const imgB = ImageRef(id: 'B', storagePath: 'b.jpg', position: 1);
+                  const imgC = ImageRef(id: 'C', storagePath: 'c.jpg', position: 2);
+                  const imgD = ImageRef(id: 'D', storagePath: 'd.jpg', position: 3);
+
+                  final result = diffImages(
+                    original: [imgA, imgB, imgC],
+                    current: [imgA, imgC, imgD],
+                  );
+
+                  final removeOk = result.toRemove.length == 1 && result.toRemove.first == 'b.jpg';
+                  final addOk = result.toAdd.length == 1 && result.toAdd.first.id == 'D';
+                  if (!removeOk || !addOk) {
+                    throw Exception(
+                      'Unexpected diff: toRemove=${result.toRemove}, toAdd=${result.toAdd.map((e) => e.id).toList()}',
+                    );
+                  }
+
+                  return 'toRemove=${result.toRemove}, toAdd=${result.toAdd.map((e) => e.id).toList()}';
+                }),
+        child: const Text('Diff Images (pure logic)'),
+      ),
+      ElevatedButton(
+        onPressed: s._busy
+            ? null
+            : () => s.run('Create New Edit Fixture (2 images)', s._createFixture),
+        child: const Text('Create New Edit Fixture (2 images)'),
+      ),
+      ElevatedButton(
+        onPressed: (s._busy || s.lastEditPost == null)
+            ? null
+            : () => s.run('Verify Post State From Server', () async {
+                  final postService = PostService();
+                  final refreshed = await postService.getPost(s.lastEditPost!.id);
+                  if (refreshed is Failure<Post>) throw Exception(refreshed.message);
+                  final post = (refreshed as Success<Post>).data;
+                  final images = post.images
+                      .map((e) => '${e.id}@${e.storagePath}(pos ${e.position})')
+                      .join(', ');
+                  return 'title="${post.title}", body="${post.body}", images=[$images]';
+                }),
+        child: const Text('Verify Post State From Server'),
+      ),
+    ];
