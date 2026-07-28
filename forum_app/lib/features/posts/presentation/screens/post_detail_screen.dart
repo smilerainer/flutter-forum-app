@@ -2,19 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:forum_app/core/result.dart';
+import 'package:forum_app/core/widgets/author_tile.dart';
 import 'package:forum_app/features/posts/data/post.dart';
 import 'package:forum_app/features/posts/data/post_service.dart';
+import 'package:forum_app/features/comments/presentation/widgets/comment_section.dart';
 import 'package:forum_app/features/posts/presentation/widgets/post_image_grid.dart';
 
 class PostDetailScreen extends StatefulWidget {
   final String postId;
   final Post? initialPost;
 
-  const PostDetailScreen({
-    super.key,
-    required this.postId,
-    this.initialPost,
-  });
+  const PostDetailScreen({super.key, required this.postId, this.initialPost});
 
   @override
   State<PostDetailScreen> createState() => _PostDetailScreenState();
@@ -96,10 +94,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
           children: [
             Text('Error: $_error'),
             const SizedBox(height: 16),
-            FilledButton(
-              onPressed: _loadPost,
-              child: const Text('Retry'),
-            ),
+            FilledButton(onPressed: _loadPost, child: const Text('Retry')),
           ],
         ),
       );
@@ -114,36 +109,14 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
           if (post.author != null)
             Padding(
               padding: const EdgeInsets.only(bottom: 16),
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    radius: 16,
-                    backgroundImage: post.author!.avatarUrl != null
-                        ? NetworkImage(post.author!.avatarUrl!)
-                        : null,
-                    child: post.author!.avatarUrl == null
-                        ? const Icon(Icons.person, size: 18)
-                        : null,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    post.author!.displayName ?? 'Unknown',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
+              child: AuthorTile(author: post.author),
             ),
           if (post.body != null && post.body!.isNotEmpty) ...[
-            Text(
-              post.body!,
-              style: Theme.of(context).textTheme.bodyLarge,
-            ),
+            Text(post.body!, style: Theme.of(context).textTheme.bodyLarge),
             const SizedBox(height: 16),
           ],
           PostImageGrid(images: post.images),
-          const SizedBox(height: 200),
+          CommentSection(postId: post.id),
         ],
       ),
     );

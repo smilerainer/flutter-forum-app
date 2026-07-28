@@ -1,13 +1,6 @@
 import 'package:flutter/material.dart';
-
-import 'package:forum_app/core/data/storage_service.dart';
+import 'package:go_router/go_router.dart';
 import 'package:forum_app/core/result.dart';
-import 'package:forum_app/core/widgets/image_picker_widget.dart';
-import 'package:forum_app/features/comments/data/comment.dart';
-import 'package:forum_app/features/comments/data/comment_service.dart';
-import 'package:forum_app/features/comments/presentation/widgets/comment_image_picker.dart';
-import 'package:forum_app/features/comments/presentation/widgets/comment_input.dart';
-import 'package:forum_app/features/comments/presentation/widgets/comment_tile.dart';
 import 'package:forum_app/features/posts/data/paginated_result.dart';
 import 'package:forum_app/features/posts/data/post.dart';
 import 'package:forum_app/features/posts/data/post_service.dart';
@@ -23,11 +16,8 @@ class _DebugConsoleState extends State<DebugConsole> {
   bool _busy = false;
 
   final PostService _postService = PostService();
-  final CommentService _commentService = CommentService();
   final List<Post> _posts = [];
   Post? _selectedPost;
-  Comment? _lastComment;
-  final List<PickerImage> _pickedImages = [];
 
   Future<void> run(String label, Future<String> Function() action) async {
     setState(() => _busy = true);
@@ -60,67 +50,9 @@ class _DebugConsoleState extends State<DebugConsole> {
     });
   }
 
-  Future<void> _fetchComments() async {
+  void _openDetail() {
     if (_selectedPost == null) return;
-    final postId = _selectedPost!.id;
-    await run('Fetch Comments', () async {
-      final result = await _commentService.fetchComments(postId);
-      return switch (result) {
-        Success<dynamic>(:final data) => () {
-          setState(() {
-            _lastComment = data.items.isNotEmpty ? data.items.last : null;
-          });
-          return '${data.items.length} comments${data.items.isNotEmpty ? ', last: ${data.items.last.body ?? '(no text)'}' : ''}';
-        }(),
-        Failure<dynamic>(:final message) => throw Exception(message),
-      };
-    });
-  }
-
-  Future<String> _submitWithImages(String body) async {
-    final postId = _selectedPost!.id;
-    final commentBody = body.isEmpty ? null : body;
-
-    final createResult = await _commentService.createComment(commentBody, postId);
-    if (createResult is Failure<String>) {
-      throw Exception(createResult.message);
-    }
-
-    final commentId = (createResult as Success<String>).data;
-    var imageCount = 0;
-
-    if (_pickedImages.isNotEmpty) {
-      final storage = StorageService();
-      final bytes = _pickedImages.map((i) => i.bytes).toList();
-      final ext = _pickedImages.first.extension;
-      final results = await storage.uploadFileBatch(
-        bytes,
-        directory: 'debug',
-        extension: ext,
-      );
-
-      final paths = <String>[];
-      for (final r in results) {
-        switch (r) {
-          case Success<String>(:final data):
-            paths.add(data);
-          case Failure<String>(:final message):
-            throw Exception(message);
-        }
-      }
-
-      if (paths.isNotEmpty) {
-        final attachResult = await _commentService.attachImages(commentId, paths);
-        if (attachResult is Failure<void>) {
-          throw Exception(attachResult.message);
-        }
-        imageCount = paths.length;
-      }
-    }
-
-    _pickedImages.clear();
-    final msg = 'Comment $commentId created, $imageCount images attached';
-    return msg;
+    context.go('/posts/${_selectedPost!.id}');
   }
 
   @override
@@ -130,14 +62,12 @@ class _DebugConsoleState extends State<DebugConsole> {
       body: Column(children: [
         Wrap(spacing: 8, runSpacing: 8, children: [
           ElevatedButton(
-            key: const Key('comment_fetch_posts'),
             onPressed: _busy ? null : _fetchPosts,
             child: const Text('Fetch Posts'),
           ),
           ElevatedButton(
-            key: const Key('comment_fetch_comments'),
-            onPressed: (_busy || _selectedPost == null) ? null : _fetchComments,
-            child: const Text('Show Comments'),
+            onPressed: (_busy || _selectedPost == null) ? null : _openDetail,
+            child: const Text('Open Post Detail'),
           ),
         ]),
         if (_posts.isNotEmpty)
@@ -158,34 +88,6 @@ class _DebugConsoleState extends State<DebugConsole> {
                 if (post != null) setState(() => _selectedPost = post);
               },
             ),
-          ),
-        if (_selectedPost != null)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            child: Column(
-              children: [
-                CommentInput(
-                  key: const Key('comment_input'),
-                  imagesCount: _pickedImages.length,
-                  onSubmit: (body) async {
-                    await run('Create Comment', () => _submitWithImages(body));
-                  },
-                ),
-                const SizedBox(height: 8),
-                CommentImagePicker(
-                  onImagesChanged: (images) {
-                    setState(() => _pickedImages
-                      ..clear()
-                      ..addAll(images));
-                  },
-                ),
-              ],
-            ),
-          ),
-        if (_lastComment != null)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: CommentTile(comment: _lastComment!),
           ),
         const Divider(),
         Expanded(

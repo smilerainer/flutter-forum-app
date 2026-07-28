@@ -94,6 +94,26 @@ class CommentService {
     }
   }
 
+  Future<Result<void>> updateComment(String commentId, String? body) async {
+    try {
+      final result = await _client
+          .from('comments')
+          .update({'body': body})
+          .eq('id', commentId)
+          .select('id');
+
+      if ((result as List).isEmpty) {
+        return const Failure<void>('You are not authorized to modify this resource.');
+      }
+
+      return const Success(null);
+    } on PostgrestException catch (e) {
+      return Failure<void>(e.message);
+    } catch (e) {
+      return const Failure<void>('Failed to update comment. Please try again.');
+    }
+  }
+
   Future<Result<void>> deleteComment(String commentId) async {
     try {
       final images = await _client

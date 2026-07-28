@@ -45,6 +45,54 @@ class CommentViewModel extends ChangeNotifier {
     }
   }
 
+  Future<void> editComment(String commentId, String? newBody) async {
+    _error = null;
+    notifyListeners();
+
+    try {
+      final result = await _commentService.updateComment(commentId, newBody);
+      if (result is Failure<void>) {
+        _error = result.message;
+        notifyListeners();
+        return;
+      }
+
+      final index = _items.indexWhere((c) => c.id == commentId);
+      if (index != -1) {
+        final old = _items[index];
+        _items[index] = Comment(
+          id: old.id,
+          body: newBody,
+          postId: old.postId,
+          userId: old.userId,
+          images: old.images,
+          author: old.author,
+          createdAt: old.createdAt,
+        );
+      }
+    } finally {
+      notifyListeners();
+    }
+  }
+
+  Future<void> deleteComment(String commentId) async {
+    _error = null;
+    notifyListeners();
+
+    try {
+      final result = await _commentService.deleteComment(commentId);
+      if (result is Failure<void>) {
+        _error = result.message;
+        notifyListeners();
+        return;
+      }
+
+      _items.removeWhere((c) => c.id == commentId);
+    } finally {
+      notifyListeners();
+    }
+  }
+
   Future<void> addComment(String body, List<XFile> images) async {
     _error = null;
     notifyListeners();
@@ -81,8 +129,10 @@ class CommentViewModel extends ChangeNotifier {
         }
 
         if (paths.isNotEmpty) {
-          final attachResult =
-              await _commentService.attachImages(commentId, paths);
+          final attachResult = await _commentService.attachImages(
+            commentId,
+            paths,
+          );
           if (attachResult is Failure<void>) {
             _error = attachResult.message;
             notifyListeners();

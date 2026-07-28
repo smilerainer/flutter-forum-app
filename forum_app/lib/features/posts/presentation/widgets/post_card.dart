@@ -73,10 +73,36 @@ class PostCard extends StatelessWidget {
                   style: theme.textTheme.bodyMedium,
                 ),
               ],
-              if (post.images.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                PostImageGrid(images: post.images),
+          if (post.images.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            PostImageGrid(images: post.images, compact: true),
+          ],
+          if (post.commentCount > 0) ...[
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Icon(Icons.chat_bubble_outline, size: 14, color: theme.colorScheme.onSurfaceVariant),
+                const SizedBox(width: 4),
+                Text(
+                  '${post.commentCount} comment${post.commentCount == 1 ? '' : 's'}',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
               ],
+            ),
+            if (post.latestCommentBody != null) ...[
+              const SizedBox(height: 4),
+              Text(
+                '${post.latestCommentAuthorName ?? 'Unknown'}: ${post.latestCommentBody}',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ],
             ],
           ),
         ),

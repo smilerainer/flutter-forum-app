@@ -10,6 +10,9 @@ class Post {
   final UserProfile? author;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final int commentCount;
+  final String? latestCommentBody;
+  final String? latestCommentAuthorName;
 
   const Post({
     required this.id,
@@ -20,6 +23,9 @@ class Post {
     this.author,
     required this.createdAt,
     required this.updatedAt,
+    this.commentCount = 0,
+    this.latestCommentBody,
+    this.latestCommentAuthorName,
   });
 
   factory Post.fromJson(Map<String, dynamic> json) {
@@ -49,6 +55,14 @@ class Post {
           : null,
       createdAt: DateTime.parse(createdAtStr),
       updatedAt: DateTime.parse(updatedAtStr),
+      commentCount: (json['comments'] as List<dynamic>?)?.length ?? 0,
+      latestCommentBody: (json['comments'] as List<dynamic>?)
+          ?.firstOrNull
+          ?.let((c) => (c as Map<String, dynamic>)['body'] as String?),
+      latestCommentAuthorName: (json['comments'] as List<dynamic>?)
+          ?.firstOrNull
+          ?.let((c) => (c as Map<String, dynamic>)['profiles'] as Map<String, dynamic>?)
+          ?.let((p) => p['display_name'] as String?),
     );
   }
 

@@ -17,7 +17,7 @@ class PostService {
     try {
       var query = _client
           .from('posts')
-          .select('*, profiles(id, display_name, avatar_url, created_at), post_images(id, storage_path, position)');
+          .select('*, profiles(id, display_name, avatar_url, created_at), post_images(id, storage_path, position), comments(body, profiles(display_name))');
 
       if (cursor != null) {
         query = query.lt('created_at', cursor);
