@@ -62,12 +62,6 @@ class _PostListScreenState extends State<PostListScreen> {
                 ),
             ],
           ),
-          floatingActionButton: authVm.isLoggedIn
-              ? FloatingActionButton(
-                  onPressed: () => context.go('/posts/create'),
-                  child: const Icon(Icons.add),
-                )
-              : null,
           body: _buildBody(_viewModel),
         );
       },
@@ -75,6 +69,8 @@ class _PostListScreenState extends State<PostListScreen> {
   }
 
   Widget _buildBody(PostListViewModel vm) {
+    final authVm = context.watch<AuthViewModel>();
+
     if (vm.isLoading && vm.items.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -104,16 +100,20 @@ class _PostListScreenState extends State<PostListScreen> {
       child: RefreshIndicator(
         onRefresh: vm.loadInitial,
         child: ListView.builder(
-          itemCount: vm.items.length + (vm.hasMore ? 1 : 0),
+          itemCount: vm.items.length + (vm.hasMore ? 1 : 0) + (authVm.isLoggedIn ? 1 : 0),
           itemBuilder: (context, index) {
-            if (index == vm.items.length) {
+            final hasCreatePrompt = authVm.isLoggedIn;
+            if (hasCreatePrompt && index == 0) {
+              return _buildCreatePrompt();
+            }
+            final adjustedIndex = hasCreatePrompt ? index - 1 : index;
+            if (adjustedIndex == vm.items.length) {
               return const Padding(
                 padding: EdgeInsets.all(16),
                 child: Center(child: CircularProgressIndicator()),
               );
             }
-
-            final post = vm.items[index];
+            final post = vm.items[adjustedIndex];
             return PostCard(
               post: post,
               onTap: () => context.push('/posts/${post.id}', extra: post),
@@ -124,11 +124,46 @@ class _PostListScreenState extends State<PostListScreen> {
     );
   }
 
+  Widget _buildCreatePrompt() {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
+      child: Card(
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: () => context.go('/posts/create'),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            child: Row(
+              children: [
+                CircleAvatar(
+                  radius: 16,
+                  child: const Icon(Icons.person, size: 18),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Make a post...',
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildEmptyState(PostListViewModel vm) {
+    final authVm = context.watch<AuthViewModel>();
     return RefreshIndicator(
       onRefresh: vm.loadInitial,
       child: ListView(
         children: [
+          if (authVm.isLoggedIn) _buildCreatePrompt(),
           SizedBox(
             height: MediaQuery.of(context).size.height * 0.6,
             child: Center(
