@@ -67,4 +67,22 @@ class PostListViewModel extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  void prependPost(Post post) {
+    _items.insert(0, post);
+    notifyListeners();
+  }
+
+  void removePost(String postId) {
+    _items.removeWhere((p) => p.id == postId);
+    notifyListeners();
+  }
+
+  void replacePost(Post updated) {
+    final index = _items.indexWhere((p) => p.id == updated.id);
+    if (index != -1) {
+      _items[index] = updated;
+      notifyListeners();
+    }
+  }
 }
