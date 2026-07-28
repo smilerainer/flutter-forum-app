@@ -115,7 +115,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
             Text(post.body!, style: Theme.of(context).textTheme.bodyLarge),
             const SizedBox(height: 16),
           ],
-          PostImageGrid(images: post.images),
+          PostImageGrid(images: post.images, compact: true),
           CommentSection(postId: post.id),
         ],
       ),

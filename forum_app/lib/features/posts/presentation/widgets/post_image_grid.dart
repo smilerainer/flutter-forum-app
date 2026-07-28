@@ -25,6 +25,26 @@ class PostImageGrid extends StatelessWidget {
 
   Widget _buildGrid(BuildContext context) {
     final storage = StorageService();
+    
+    if (images.length == 1) {
+      final image = images.first;
+      final url = storage.getPublicUrl(image.storagePath);
+      return GestureDetector(
+        onTap: () => showImagePreview(context, url),
+        child: Container(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.width * 0.8,
+          ),
+          child: Image.network(
+            url,
+            fit: BoxFit.contain,
+            width: double.infinity,
+            errorBuilder: (context, event, stackTrace) => const Icon(Icons.broken_image),
+          ),
+        ),
+      );
+    }
+    
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -69,7 +89,7 @@ class PostImageGrid extends StatelessWidget {
                 width: 80,
                 height: 80,
                 fit: BoxFit.cover,
-                errorBuilder: (_, _, _) => const SizedBox(
+                errorBuilder: (context, event, stackTrace) => const SizedBox(
                   width: 80,
                   height: 80,
                   child: Center(child: Icon(Icons.broken_image)),

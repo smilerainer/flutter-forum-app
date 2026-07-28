@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:forum_app/features/posts/data/post.dart';
 import 'package:forum_app/features/posts/presentation/widgets/post_image_grid.dart';
+import 'package:forum_app/features/posts/presentation/widgets/comment_preview_card.dart';
 
 class PostCard extends StatelessWidget {
   final Post post;
@@ -91,17 +92,12 @@ class PostCard extends StatelessWidget {
                 ),
               ],
             ),
-            if (post.latestCommentBody != null) ...[
-              const SizedBox(height: 4),
-              Text(
-                '${post.latestCommentAuthorName ?? 'Unknown'}: ${post.latestCommentBody}',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
+            if (post.latestCommentBody != null || post.latestCommentImages.isNotEmpty)
+              CommentPreviewCard(
+                authorName: post.latestCommentAuthorName ?? 'Unknown',
+                body: post.latestCommentBody,
+                images: post.latestCommentImages,
               ),
-            ],
           ],
             ],
           ),

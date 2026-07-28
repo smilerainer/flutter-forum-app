@@ -13,6 +13,7 @@ class Post {
   final int commentCount;
   final String? latestCommentBody;
   final String? latestCommentAuthorName;
+  final List<ImageRef> latestCommentImages;
 
   const Post({
     required this.id,
@@ -26,6 +27,7 @@ class Post {
     this.commentCount = 0,
     this.latestCommentBody,
     this.latestCommentAuthorName,
+    this.latestCommentImages = const [],
   });
 
   factory Post.fromJson(Map<String, dynamic> json) {
@@ -41,6 +43,8 @@ class Post {
         updatedAtStr == null) {
       throw const FormatException('Missing required post fields');
     }
+    final comments = json['comments'] as List<dynamic>?;
+    final latestComment = comments?.firstOrNull as Map<String, dynamic>?;
     return Post(
       id: id,
       title: title,
@@ -55,15 +59,14 @@ class Post {
           : null,
       createdAt: DateTime.parse(createdAtStr),
       updatedAt: DateTime.parse(updatedAtStr),
-      commentCount: (json['comments'] as List<dynamic>?)?.length ?? 0,
-      latestCommentBody: _firstField(json['comments'], 'body'),
+      commentCount: comments?.length ?? 0,
+      latestCommentBody: latestComment?['body'] as String?,
       latestCommentAuthorName: _firstNestedField(json['comments'], 'profiles', 'display_name'),
+      latestCommentImages: (latestComment?['comment_images'] as List<dynamic>?)
+          ?.map((e) => ImageRef.fromJson(e as Map<String, dynamic>))
+          .toList() ??
+          [],
     );
-  }
-
-  static String? _firstField(List<dynamic>? list, String key) {
-    final first = list?.firstOrNull as Map<String, dynamic>?;
-    return first?[key] as String?;
   }
 
   static String? _firstNestedField(List<dynamic>? list, String parent, String key) {
@@ -81,5 +84,14 @@ class Post {
     'profiles': author?.toJson(),
     'created_at': createdAt.toIso8601String(),
     'updated_at': updatedAt.toIso8601String(),
+    'comments': latestCommentBody != null
+        ? [
+            {
+              'body': latestCommentBody,
+              'profiles': latestCommentAuthorName != null ? {'display_name': latestCommentAuthorName} : null,
+              'comment_images': latestCommentImages.map((e) => e.toJson()).toList(),
+            }
+          ]
+        : [],
   };
 }

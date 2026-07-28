@@ -150,7 +150,7 @@ class _CommentTileState extends State<CommentTile> {
               ],
               if (widget.comment.images.isNotEmpty) ...[
                 const SizedBox(height: 8),
-                PostImageGrid(images: widget.comment.images),
+                PostImageGrid(images: widget.comment.images, compact: true),
               ],
             ],
           ],
