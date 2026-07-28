@@ -13,21 +13,21 @@
 [/] Profile Page Name Update
 
 ## Posts CRUD
-[ ] Public Post Listing
+[/] Public Post Listing
 
-[ ] Posts with Multiple Image Preview
+[/] Posts with Multiple Image Preview
 
-[ ] Posts with Pagination
+[/] Posts with Pagination
 
-[ ] Posts Visible Even While Logged Out
+[/] Posts Visible Even While Logged Out
 
-[ ] Post Creation with Batch Image Upload/Removal
+[/] Post Creation with Batch Image Upload/Removal
 
-[ ] View Post with Image
+[/] View Post with Image
 
-[ ] Update Post with Batch Image Upload/Removal
+[/] Update Post with Batch Image Upload/Removal
 
-[ ] Delete Post
+[/] Delete Post
 
 ## Comments CRUD
 [ ] Comments with Batch Image Upload
