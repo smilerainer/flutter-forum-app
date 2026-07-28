@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 
 class CommentInput extends StatefulWidget {
   final Future<void> Function(String body) onSubmit;
+  final int imagesCount;
 
-  const CommentInput({super.key, required this.onSubmit});
+  const CommentInput({super.key, required this.onSubmit, this.imagesCount = 0});
 
   @override
   State<CommentInput> createState() => _CommentInputState();
@@ -21,7 +22,7 @@ class _CommentInputState extends State<CommentInput> {
 
   Future<void> _submit() async {
     final body = _controller.text.trim();
-    if (body.isEmpty) return;
+    if (body.isEmpty && widget.imagesCount == 0) return;
 
     setState(() => _isSubmitting = true);
 

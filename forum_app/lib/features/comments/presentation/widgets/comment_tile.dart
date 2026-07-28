@@ -55,11 +55,13 @@ class CommentTile extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 8),
-            Text(
-              comment.body,
-              style: theme.textTheme.bodyMedium,
-            ),
+            if (comment.body != null) ...[
+              const SizedBox(height: 8),
+              Text(
+                comment.body!,
+                style: theme.textTheme.bodyMedium,
+              ),
+            ],
             if (comment.images.isNotEmpty) ...[
               const SizedBox(height: 8),
               PostImageGrid(images: comment.images),

@@ -52,7 +52,7 @@ class CommentService {
     }
   }
 
-  Future<Result<String>> createComment(String body, String postId) async {
+  Future<Result<String>> createComment(String? body, String postId) async {
     try {
       final now = _now();
       final result = await _client
