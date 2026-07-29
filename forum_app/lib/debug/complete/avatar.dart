@@ -123,6 +123,7 @@ Future<void> _updateAvatar(_DebugConsoleState s) async {
   });
 }
 
+// ignore: library_private_types_in_public_api
 List<Widget> buttons(_DebugConsoleState s) => [
       ElevatedButton(
         onPressed: s._busy ? null : () => _fetchProfile(s),

@@ -17,10 +17,9 @@ class ProfileViewModel extends ChangeNotifier {
 
   ProfileViewModel({
     ProfileService? profileService,
-    required AuthViewModel authViewModel,
+    required this._authViewModel,
     StorageService? storageService,
   })  : _profileService = profileService ?? ProfileService(),
-        _authViewModel = authViewModel,
         _storageService = storageService ?? StorageService();
 
   Future<void> load({String? profileId}) async {

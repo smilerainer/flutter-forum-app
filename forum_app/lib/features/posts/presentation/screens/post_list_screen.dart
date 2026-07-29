@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:forum_app/features/auth/logic/auth_view_model.dart';
 import 'package:forum_app/features/posts/data/post_service.dart';
 import 'package:forum_app/features/posts/logic/post_list_view_model.dart';

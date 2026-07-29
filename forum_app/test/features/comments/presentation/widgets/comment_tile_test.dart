@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:forum_app/core/data/image_ref.dart';
 import 'package:forum_app/core/data/storage_service.dart';
 import 'package:forum_app/features/comments/data/comment.dart';
 import 'package:forum_app/features/comments/presentation/widgets/comment_tile.dart';

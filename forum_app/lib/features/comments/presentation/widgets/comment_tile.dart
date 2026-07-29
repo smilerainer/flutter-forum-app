@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:forum_app/core/widgets/author_tile.dart';
 import 'package:forum_app/core/data/storage_service.dart';
 import 'package:forum_app/features/comments/data/comment.dart';
