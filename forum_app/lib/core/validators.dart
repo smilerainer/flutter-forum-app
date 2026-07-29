@@ -11,4 +11,12 @@ class Validators {
     if (value.length < 6) return 'Password must be at least 6 characters';
     return null;
   }
+
+  static String? displayName(String? value) {
+    if (value == null || value.trim().isEmpty) return 'Display name cannot be empty.';
+    final trimmed = value.trim();
+    if (trimmed.length < 2) return 'Display name must be at least 2 characters.';
+    if (trimmed.length > 50) return 'Display name must be 50 characters or fewer.';
+    return null;
+  }
 }

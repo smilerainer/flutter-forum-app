@@ -11,6 +11,7 @@ import 'package:forum_app/features/posts/presentation/screens/post_detail_screen
 import 'package:forum_app/features/posts/data/post.dart';
 import 'package:forum_app/features/posts/presentation/screens/post_edit_screen.dart';
 import 'package:forum_app/features/posts/presentation/screens/post_list_screen.dart';
+import 'package:forum_app/features/profile/presentation/screens/profile_screen.dart';
 
 String? authRedirect({required bool loggedIn, required String matchedLocation}) {
   final onAuthScreen = matchedLocation == '/login' || matchedLocation == '/register';
@@ -33,6 +34,7 @@ GoRouter buildRouter(AuthViewModel authViewModel, {GlobalKey<NavigatorState>? na
     routes: [
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(path: '/register', builder: (context, state) => const RegisterScreen()),
+      GoRoute(path: '/profile', builder: (context, state) => const ProfileScreen()),
       GoRoute(
         path: '/posts/create',
         builder: (context, state) => const PostCreateScreen(),

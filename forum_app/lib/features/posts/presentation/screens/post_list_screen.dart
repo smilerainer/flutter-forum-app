@@ -49,6 +49,12 @@ class _PostListScreenState extends State<PostListScreen> {
             title: const Text('Feed'),
             actions: [
               if (authVm.isLoggedIn)
+                IconButton(
+                  tooltip: 'Profile',
+                  icon: const Icon(Icons.person),
+                  onPressed: () => context.push('/profile'),
+                ),
+              if (authVm.isLoggedIn)
                 TextButton(
                   key: const Key('post_list_sign_out_btn'),
                   onPressed: () => authVm.signOut(),
