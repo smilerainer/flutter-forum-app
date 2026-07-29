@@ -59,16 +59,16 @@ class _ProfilePhotoPickerState extends State<ProfilePhotoPicker> {
           child: Container(
             width: 100,
             height: 100,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.grey.shade200,
-              image: hasAvatar
-                  ? DecorationImage(
-                      image: NetworkImage(widget.currentAvatarUrl!),
-                      fit: BoxFit.contain,
-                    )
-                  : null,
-            ),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.grey.shade200,
+                image: hasAvatar
+                    ? DecorationImage(
+                        image: NetworkImage(widget.currentAvatarUrl!),
+                        fit: BoxFit.cover,
+                      )
+                    : null,
+              ),
             child: !hasAvatar
                 ? const Icon(Icons.person, size: 60, color: Colors.grey)
                 : null,
