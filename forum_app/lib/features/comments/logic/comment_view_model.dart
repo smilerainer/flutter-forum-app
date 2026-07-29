@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'package:forum_app/core/data/image_ref.dart';
 import 'package:forum_app/core/data/storage_service.dart';
 import 'package:forum_app/core/result.dart';
 import 'package:forum_app/features/comments/data/comment.dart';
@@ -141,10 +143,24 @@ class CommentViewModel extends ChangeNotifier {
         }
       }
 
-      final reloadResult = await _commentService.fetchComments(postId);
-      if (reloadResult is Success<PaginatedResult<Comment>>) {
-        _items = reloadResult.data.items;
-      }
+      final newComment = Comment(
+        id: commentId,
+        body: body,
+        postId: postId,
+        userId: Supabase.instance.client.auth.currentUser?.id ?? '',
+        images: List.generate(
+          images.length,
+          (i) => ImageRef(
+            id: 'tmp_${commentId}_$i',
+            storagePath: images[i].name.contains('.')
+                ? 'comments/$commentId/${images[i].name}'
+                : 'comments/$commentId/${images[i].name}.png',
+            position: i,
+          ),
+        ),
+        createdAt: DateTime.now(),
+      );
+      _items = [..._items, newComment];
     } finally {
       notifyListeners();
     }

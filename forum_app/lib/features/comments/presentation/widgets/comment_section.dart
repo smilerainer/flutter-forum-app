@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -17,10 +19,16 @@ class CommentSection extends StatefulWidget {
   State<CommentSection> createState() => _CommentSectionState();
 }
 
+class _PickedImage {
+  final XFile file;
+  final Uint8List bytes;
+  const _PickedImage(this.file, this.bytes);
+}
+
 class _CommentSectionState extends State<CommentSection> {
   late final CommentViewModel _viewModel;
   final ImagePicker _picker = ImagePicker();
-  List<XFile> _pickedImages = [];
+  List<_PickedImage> _pickedImages = [];
 
   @override
   void initState() {
@@ -42,12 +50,17 @@ class _CommentSectionState extends State<CommentSection> {
   Future<void> _pickImages() async {
     final picked = await _picker.pickMultiImage();
     if (picked.isNotEmpty) {
-      setState(() => _pickedImages = picked);
+      final loaded = <_PickedImage>[];
+      for (final x in picked) {
+        final bytes = await x.readAsBytes();
+        loaded.add(_PickedImage(x, bytes));
+      }
+      setState(() => _pickedImages.addAll(loaded));
     }
   }
 
   Future<void> _onSubmit(String body) async {
-    await _viewModel.addComment(body, _pickedImages);
+    await _viewModel.addComment(body, _pickedImages.map((p) => p.file).toList());
     if (mounted && _viewModel.error == null) {
       setState(() => _pickedImages = []);
     }
@@ -62,17 +75,17 @@ class _CommentSectionState extends State<CommentSection> {
         itemCount: _pickedImages.length,
         separatorBuilder: (_, _) => const SizedBox(width: 8),
         itemBuilder: (_, index) {
-          final file = _pickedImages[index];
+          final picked = _pickedImages[index];
           return Stack(
             children: [
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
-                child: Image.network(
-                  file.path,
+                  child: Image.memory(
+                  picked.bytes,
                   width: 80,
                   height: 80,
                   fit: BoxFit.cover,
-                  errorBuilder: (_, _, _) => const SizedBox(
+                  errorBuilder: (context, error, stackTrace) => const SizedBox(
                     width: 80,
                     height: 80,
                     child: Center(child: Icon(Icons.broken_image)),
@@ -133,7 +146,7 @@ class _CommentSectionState extends State<CommentSection> {
               IconButton(
                 icon: const Icon(Icons.image),
                 tooltip: 'Add images',
-                onPressed: _pickedImages.isEmpty ? _pickImages : null,
+                onPressed: _pickImages,
               ),
               Expanded(
                 child: CommentInput(

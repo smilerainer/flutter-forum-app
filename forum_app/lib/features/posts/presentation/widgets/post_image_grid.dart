@@ -17,13 +17,15 @@ class PostImageGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     if (images.isEmpty) return const SizedBox.shrink();
 
+    final sortedImages = List<ImageRef>.of(images)..sort((a, b) => a.position.compareTo(b.position));
+
     if (compact) {
-      return _buildCompact(context);
+      return _buildCompact(context, sortedImages);
     }
-    return _buildGrid(context);
+    return _buildGrid(context, sortedImages);
   }
 
-  Widget _buildGrid(BuildContext context) {
+  Widget _buildGrid(BuildContext context, List<ImageRef> images) {
     final storage = StorageService();
     
     if (images.length == 1) {
@@ -69,7 +71,7 @@ class PostImageGrid extends StatelessWidget {
     );
   }
 
-  Widget _buildCompact(BuildContext context) {
+  Widget _buildCompact(BuildContext context, List<ImageRef> images) {
     final storage = StorageService();
     return SizedBox(
       height: 80,
