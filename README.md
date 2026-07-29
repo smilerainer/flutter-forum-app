@@ -30,7 +30,7 @@
 [/] Delete Post
 
 ## Comments CRUD
-[ ] Comments with Batch Image Upload
+[/] Comments with Batch Image Upload
 
-[ ] Each posts can have multiple comments created by Users
+[/] Each posts can have multiple comments created by Users
 
