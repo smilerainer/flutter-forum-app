@@ -69,7 +69,12 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
           if (_post != null && _isOwnPost(_post!)) ...[
             IconButton(
               icon: const Icon(Icons.edit),
-              onPressed: () => context.push('/posts/${_post!.id}/edit'),
+              onPressed: () async {
+                final result = await context.push<Post>('/posts/${_post!.id}/edit');
+                if (result != null && mounted) {
+                  setState(() => _post = result);
+                }
+              },
             ),
             IconButton(
               icon: const Icon(Icons.delete_outline),
