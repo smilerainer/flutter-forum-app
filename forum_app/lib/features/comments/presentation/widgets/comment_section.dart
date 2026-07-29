@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:forum_app/core/data/storage_service.dart';
+import 'package:forum_app/core/widgets/image_picker_widget.dart';
 import 'package:forum_app/features/comments/data/comment_service.dart';
 import 'package:forum_app/features/comments/logic/comment_view_model.dart';
 import 'package:forum_app/features/comments/presentation/widgets/comment_input.dart';
@@ -222,7 +223,8 @@ class _CommentSectionState extends State<CommentSection> {
                   return CommentTile(
                     comment: comment,
                     onDelete: () => _viewModel.deleteComment(comment.id),
-                    onEdit: (newBody) => _viewModel.editComment(comment.id, newBody),
+                    onEdit: (newBody, {Set<String> removedIds = const {}, List<PickerImage> newImages = const []}) =>
+                        _viewModel.editComment(comment.id, newBody, removedIds: removedIds, newImages: newImages),
                   );
                 },
               ),

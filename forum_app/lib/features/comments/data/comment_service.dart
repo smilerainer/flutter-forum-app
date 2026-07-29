@@ -114,6 +114,31 @@ class CommentService {
     }
   }
 
+  Future<Result<void>> removeCommentImages(List<String> imageIds) async {
+    try {
+      if (imageIds.isEmpty) return const Success(null);
+      var deletedCount = 0;
+      for (final id in imageIds) {
+        final result = await _client
+            .from('comment_images')
+            .delete()
+            .eq('id', id)
+            .select('id');
+        if ((result as List).isNotEmpty) {
+          deletedCount++;
+        }
+      }
+      if (deletedCount == 0) {
+        return const Failure<void>('No images were removed. They may not exist or RLS blocked the operation.');
+      }
+      return const Success(null);
+    } on PostgrestException catch (e) {
+      return Failure<void>(e.message);
+    } catch (e) {
+      return const Failure<void>('Failed to remove images. Please try again.');
+    }
+  }
+
   Future<Result<void>> deleteComment(String commentId) async {
     try {
       final images = await _client

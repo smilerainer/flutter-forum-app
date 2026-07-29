@@ -1,13 +1,13 @@
 import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-
 import 'package:forum_app/core/data/image_ref.dart';
 import 'package:forum_app/core/data/storage_service.dart';
 import 'package:forum_app/core/result.dart';
+import 'package:forum_app/core/widgets/image_picker_widget.dart';
 import 'package:forum_app/features/comments/data/comment.dart';
 import 'package:forum_app/features/comments/data/comment_service.dart';
 import 'package:forum_app/features/posts/data/paginated_result.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class CommentViewModel extends ChangeNotifier {
   final CommentService _commentService;
@@ -47,11 +47,76 @@ class CommentViewModel extends ChangeNotifier {
     }
   }
 
-  Future<void> editComment(String commentId, String? newBody) async {
+  Future<void> editComment(
+    String commentId,
+    String? newBody, {
+    Set<String> removedIds = const {},
+    List<PickerImage> newImages = const [],
+  }) async {
     _error = null;
     notifyListeners();
 
     try {
+      final index = _items.indexWhere((c) => c.id == commentId);
+      if (index == -1) return;
+      final oldComment = _items[index];
+
+      // 1. Delete storage files for removed images
+      if (removedIds.isNotEmpty) {
+        final removedRefs = oldComment.images
+            .where((img) => removedIds.contains(img.id))
+            .toList();
+        for (final ref in removedRefs) {
+          await _storageService.deleteFile(path: ref.storagePath);
+        }
+        final removeResult = await _commentService.removeCommentImages(removedIds.toList());
+        if (removeResult is Failure<void>) {
+          _error = removeResult.message;
+          notifyListeners();
+          return;
+        }
+      }
+
+      // 2. Upload and attach new images
+      List<ImageRef> updatedImages = oldComment.images
+          .where((img) => !removedIds.contains(img.id))
+          .toList();
+      if (newImages.isNotEmpty) {
+        final paths = <String>[];
+        for (final image in newImages) {
+          final ext = image.name.contains('.') ? image.name.split('.').last : 'png';
+          final uploadResult = await _storageService.uploadFile(
+            image.bytes,
+            directory: 'comments/$commentId',
+            extension: ext,
+          );
+          if (uploadResult is Success<String>) {
+            paths.add(uploadResult.data);
+          } else if (uploadResult is Failure<String>) {
+            _error = uploadResult.message;
+            notifyListeners();
+            return;
+          }
+        }
+        if (paths.isNotEmpty) {
+          final startPosition = updatedImages.length;
+          for (final path in paths.asMap().entries) {
+            updatedImages.add(ImageRef(
+              id: 'tmp_${commentId}_${path.key}',
+              storagePath: path.value,
+              position: startPosition + path.key,
+            ));
+          }
+          final attachResult = await _commentService.attachImages(commentId, paths);
+          if (attachResult is Failure<void>) {
+            _error = attachResult.message;
+            notifyListeners();
+            return;
+          }
+        }
+      }
+
+      // 3. Update comment body
       final result = await _commentService.updateComment(commentId, newBody);
       if (result is Failure<void>) {
         _error = result.message;
@@ -59,19 +124,15 @@ class CommentViewModel extends ChangeNotifier {
         return;
       }
 
-      final index = _items.indexWhere((c) => c.id == commentId);
-      if (index != -1) {
-        final old = _items[index];
-        _items[index] = Comment(
-          id: old.id,
-          body: newBody,
-          postId: old.postId,
-          userId: old.userId,
-          images: old.images,
-          author: old.author,
-          createdAt: old.createdAt,
-        );
-      }
+      _items[index] = Comment(
+        id: oldComment.id,
+        body: newBody,
+        postId: oldComment.postId,
+        userId: oldComment.userId,
+        images: updatedImages,
+        author: oldComment.author,
+        createdAt: oldComment.createdAt,
+      );
     } finally {
       notifyListeners();
     }

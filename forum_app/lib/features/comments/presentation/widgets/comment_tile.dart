@@ -3,11 +3,18 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:forum_app/core/widgets/author_tile.dart';
 import 'package:forum_app/features/comments/data/comment.dart';
 import 'package:forum_app/features/posts/presentation/widgets/post_image_grid.dart';
+import 'package:forum_app/features/posts/presentation/widgets/post_image_editor.dart';
+
+import 'package:forum_app/core/widgets/image_picker_widget.dart';
 
 class CommentTile extends StatefulWidget {
   final Comment comment;
   final VoidCallback? onDelete;
-  final Future<void> Function(String? newBody)? onEdit;
+  final Future<void> Function(
+    String? newBody, {
+    Set<String> removedIds,
+    List<PickerImage> newImages,
+  })? onEdit;
 
   const CommentTile({
     super.key,
@@ -23,6 +30,7 @@ class CommentTile extends StatefulWidget {
 class _CommentTileState extends State<CommentTile> {
   bool _isEditing = false;
   late TextEditingController _editController;
+  PostImageEditorState _editorState = PostImageEditorState(existingImages: const []);
 
   @override
   void initState() {
@@ -55,7 +63,11 @@ class _CommentTileState extends State<CommentTile> {
   Future<void> _saveEdit() async {
     final newBody = _editController.text.trim();
     if (widget.onEdit != null) {
-      await widget.onEdit!(newBody.isEmpty ? null : newBody);
+      await widget.onEdit!(
+        newBody.isEmpty ? null : newBody,
+        removedIds: _editorState.removedIds,
+        newImages: _editorState.newImages,
+      );
     }
     if (mounted) setState(() => _isEditing = false);
   }
@@ -63,6 +75,7 @@ class _CommentTileState extends State<CommentTile> {
   void _cancelEdit() {
     setState(() {
       _editController.text = widget.comment.body ?? '';
+      _editorState = PostImageEditorState(existingImages: widget.comment.images);
       _isEditing = false;
     });
   }
@@ -100,7 +113,10 @@ class _CommentTileState extends State<CommentTile> {
                   IconButton(
                     icon: Icon(Icons.edit_outlined,
                         size: 18, color: theme.colorScheme.onSurfaceVariant),
-                    onPressed: () => setState(() => _isEditing = true),
+                    onPressed: () => setState(() {
+                      _editorState = PostImageEditorState(existingImages: widget.comment.images);
+                      _isEditing = true;
+                    }),
                     tooltip: 'Edit comment',
                     visualDensity: VisualDensity.compact,
                   ),
@@ -127,6 +143,13 @@ class _CommentTileState extends State<CommentTile> {
                 maxLines: 3,
                 minLines: 1,
                 autofocus: true,
+              ),
+              const SizedBox(height: 8),
+              PostImageEditor(
+                existingImages: widget.comment.images,
+                onChanged: (state) {
+                  setState(() => _editorState = state);
+                },
               ),
               const SizedBox(height: 8),
               Row(
