@@ -124,7 +124,29 @@ class _CommentTileState extends State<CommentTile> {
                     IconButton(
                       icon: Icon(Icons.delete_outline,
                           size: 18, color: theme.colorScheme.error),
-                      onPressed: widget.onDelete,
+                      onPressed: () async {
+                        final confirmed = await showDialog<bool>(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text('Delete comment?'),
+                            content: const Text('Are you sure you want to delete this comment? This cannot be undone.'),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, false),
+                                child: const Text('Cancel'),
+                              ),
+                              FilledButton(
+                                onPressed: () => Navigator.pop(context, true),
+                                style: FilledButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
+                                child: const Text('Delete'),
+                              ),
+                            ],
+                          ),
+                        );
+                        if (confirmed == true) {
+                          widget.onDelete?.call();
+                        }
+                      },
                       tooltip: 'Delete comment',
                       visualDensity: VisualDensity.compact,
                     ),

@@ -66,11 +66,18 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
       appBar: AppBar(
         title: Text(_post?.title ?? 'Post'),
         actions: [
-          if (_post != null && _isOwnPost(_post!))
+          if (_post != null && _isOwnPost(_post!)) ...[
             IconButton(
               icon: const Icon(Icons.edit),
               onPressed: () => context.push('/posts/${_post!.id}/edit'),
             ),
+            IconButton(
+              icon: const Icon(Icons.delete_outline),
+              color: Theme.of(context).colorScheme.error,
+              onPressed: _showDeletePostDialog,
+              tooltip: 'Delete post',
+            ),
+          ],
         ],
       ),
       body: _buildBody(),
@@ -80,6 +87,52 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   bool _isOwnPost(Post post) {
     final currentUserId = Supabase.instance.client.auth.currentUser?.id;
     return currentUserId != null && post.userId == currentUserId;
+  }
+
+  Future<void> _showDeletePostDialog() async {
+    final post = _post!;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete post?'),
+        content: const Text('Are you sure you want to delete this post? This cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: FilledButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    setState(() => _isLoading = true);
+
+    final result = await _postService.deletePost(post.id);
+
+    if (!mounted) return;
+
+    if (result is Success<void>) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Post deleted')),
+        );
+      }
+      context.go('/posts');
+    } else if (result is Failure<void>) {
+      setState(() => _isLoading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(result.message)),
+        );
+      }
+    }
   }
 
   Widget _buildBody() {
