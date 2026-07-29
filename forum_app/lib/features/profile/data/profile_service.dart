@@ -57,7 +57,7 @@ class ProfileService {
     }
   }
 
-  Future<Result<void>> updateAvatar(String uid, Uint8List bytes, {String extension = 'png'}) async {
+  Future<Result<String>> updateAvatar(String uid, Uint8List bytes, {String extension = 'png'}) async {
     try {
       final storage = StorageService(client: _client);
       final result = await storage.uploadFile(bytes, directory: 'avatars', extension: extension);
@@ -76,11 +76,31 @@ class ProfileService {
         return const Failure('You are not authorized to modify this resource.');
       }
 
-      return const Success(null);
+      return Success(publicUrl);
     } on PostgrestException catch (e) {
       return Failure(e.message);
     } catch (_) {
       return const Failure('Failed to update avatar. Please try again.');
+    }
+  }
+
+  Future<Result<void>> clearAvatar(String uid) async {
+    try {
+      final updateResult = await _client
+        .from('profiles')
+        .update({'avatar_url': null, 'updated_at': _now().toIso8601String()})
+        .eq('id', uid)
+        .select('id');
+
+      if ((updateResult as List).isEmpty) {
+        return const Failure('You are not authorized to modify this resource.');
+      }
+
+      return const Success(null);
+    } on PostgrestException catch (e) {
+      return Failure(e.message);
+    } catch (_) {
+      return const Failure('Failed to remove avatar. Please try again.');
     }
   }
 

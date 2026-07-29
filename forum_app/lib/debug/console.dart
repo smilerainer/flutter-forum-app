@@ -112,7 +112,7 @@ Future<void> _updateAvatar(_DebugConsoleState s) async {
     final ext = picked.name.contains('.') ? picked.name.split('.').last : 'png';
     final service = ProfileService();
     final updateResult = await service.updateAvatar(s.lastProfileUid!, bytes, extension: ext);
-    if (updateResult is Failure<void>) {
+    if (updateResult is Failure<String>) {
       throw Exception(updateResult.message);
     }
     final refetchResult = await service.fetchProfile(s.lastProfileUid!);

@@ -62,7 +62,7 @@ class _ProfileServicePanelState extends State<ProfileServicePanel>
                     if (newName.isEmpty) throw Exception('Enter a new name first.');
                     final service = ProfileService();
                     final updateResult = await service.updateProfile(_lastFetchedUid!, newName);
-                    if (updateResult is Failure) {
+                    if (updateResult is Failure<String>) {
                       throw Exception((updateResult).message);
                     }
                     final refetchResult = await service.fetchProfile(_lastFetchedUid!);
@@ -85,7 +85,7 @@ class _ProfileServicePanelState extends State<ProfileServicePanel>
                     final ext = picked.name.contains('.') ? picked.name.split('.').last : 'png';
                     final service = ProfileService();
                     final updateResult = await service.updateAvatar(_lastFetchedUid!, bytes, extension: ext);
-                    if (updateResult is Failure) {
+                    if (updateResult is Failure<String>) {
                       throw Exception((updateResult).message);
                     }
                     final refetchResult = await service.fetchProfile(_lastFetchedUid!);

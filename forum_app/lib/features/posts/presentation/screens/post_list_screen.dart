@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:forum_app/features/auth/logic/auth_view_model.dart';
 import 'package:forum_app/features/posts/data/post_service.dart';
 import 'package:forum_app/features/posts/logic/post_list_view_model.dart';
 import 'package:forum_app/features/posts/presentation/widgets/post_card.dart';
+import 'package:forum_app/core/result.dart';
+import 'package:forum_app/features/profile/data/profile_service.dart';
+import 'package:forum_app/features/profile/data/user_profile.dart';
 
 class PostListScreen extends StatefulWidget {
   const PostListScreen({super.key});
@@ -15,12 +19,27 @@ class PostListScreen extends StatefulWidget {
 
 class _PostListScreenState extends State<PostListScreen> {
   late final PostListViewModel _viewModel;
+  final _profileService = ProfileService();
+  UserProfile? _currentUserProfile;
 
   @override
   void initState() {
     super.initState();
     _viewModel = PostListViewModel(PostService());
     _viewModel.loadInitial();
+    _loadCurrentUserProfile();
+  }
+
+  Future<void> _loadCurrentUserProfile() async {
+    final uid = Supabase.instance.client.auth.currentUser?.id;
+    if (uid == null) return;
+    final result = await _profileService.fetchProfile(uid);
+    if (!mounted) return;
+    if (result is Success<UserProfile>) {
+      setState(() {
+        _currentUserProfile = result.data;
+      });
+    }
   }
 
   @override
@@ -144,7 +163,12 @@ class _PostListScreenState extends State<PostListScreen> {
               children: [
                 CircleAvatar(
                   radius: 16,
-                  child: const Icon(Icons.person, size: 18),
+                  backgroundImage: _currentUserProfile?.avatarUrl != null
+                      ? NetworkImage(_currentUserProfile!.avatarUrl!)
+                      : null,
+                  child: _currentUserProfile?.avatarUrl == null
+                      ? const Icon(Icons.person, size: 18)
+                      : null,
                 ),
                 const SizedBox(width: 12),
                 Expanded(

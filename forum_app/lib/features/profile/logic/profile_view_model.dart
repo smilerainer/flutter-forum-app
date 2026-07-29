@@ -104,18 +104,17 @@ class ProfileViewModel extends ChangeNotifier {
 
       isSaving = false;
 
-      if (uploadResult is Success<void>) {
-        final newUrl = _storageService.getPublicUrl('avatars/$uid.$extension');
+      if (uploadResult is Success<String>) {
         if (profile != null) {
           profile = UserProfile(
             id: profile!.id,
             displayName: profile!.displayName,
-            avatarUrl: newUrl,
+            avatarUrl: uploadResult.data,
             createdAt: profile!.createdAt,
             updatedAt: DateTime.now(),
           );
         }
-      } else if (uploadResult is Failure<void>) {
+      } else if (uploadResult is Failure<String>) {
         error = uploadResult.message;
       }
     } catch (e) {
@@ -153,7 +152,7 @@ class ProfileViewModel extends ChangeNotifier {
         }
       }
 
-      final result = await _profileService.updateProfile(uid, profile?.displayName ?? '');
+      final result = await _profileService.clearAvatar(uid);
 
       isSaving = false;
 
