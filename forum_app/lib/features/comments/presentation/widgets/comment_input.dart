@@ -43,7 +43,7 @@ class _CommentInputState extends State<CommentInput> {
           child: TextField(
             controller: _controller,
             decoration: const InputDecoration(
-              hintText: 'Write a comment...',
+              hintText: 'Comment',
               border: OutlineInputBorder(),
               isDense: true,
               contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),

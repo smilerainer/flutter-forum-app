@@ -146,7 +146,6 @@ class _CommentSectionState extends State<CommentSection> {
             children: [
               IconButton(
                 icon: const Icon(Icons.image),
-                tooltip: 'Add images',
                 onPressed: _pickImages,
               ),
               Expanded(
@@ -208,7 +207,7 @@ class _CommentSectionState extends State<CommentSection> {
                 padding: EdgeInsets.all(16),
                 child: Center(
                   child: Text(
-                    'No comments yet. Be the first to comment!',
+                    'No comments yet',
                     style: TextStyle(color: Colors.grey),
                   ),
                 ),
