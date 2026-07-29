@@ -6,8 +6,9 @@ import 'package:forum_app/features/posts/presentation/widgets/comment_preview_ca
 class PostCard extends StatelessWidget {
   final Post post;
   final VoidCallback? onTap;
+  final VoidCallback? onAuthorTap;
 
-  const PostCard({super.key, required this.post, this.onTap});
+  const PostCard({super.key, required this.post, this.onTap, this.onAuthorTap});
 
   String _timeAgo(DateTime dt) {
     final diff = DateTime.now().difference(dt);
@@ -29,34 +30,37 @@ class PostCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  CircleAvatar(
-                    radius: 14,
-                    backgroundImage: post.author?.avatarUrl != null
-                        ? NetworkImage(post.author!.avatarUrl!)
-                        : null,
-                    child: post.author?.avatarUrl == null
-                        ? const Icon(Icons.person, size: 16)
-                        : null,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      post.author?.displayName ?? 'Unknown',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        fontWeight: FontWeight.w600,
+              InkWell(
+                onTap: onAuthorTap,
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 14,
+                      backgroundImage: post.author?.avatarUrl != null
+                          ? NetworkImage(post.author!.avatarUrl!)
+                          : null,
+                      child: post.author?.avatarUrl == null
+                          ? const Icon(Icons.person, size: 16)
+                          : null,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        post.author?.displayName ?? 'Unknown',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      overflow: TextOverflow.ellipsis,
                     ),
-                  ),
-                  Text(
-                    _timeAgo(post.createdAt),
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
+                    Text(
+                      _timeAgo(post.createdAt),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
               const SizedBox(height: 8),
               Text(
@@ -74,32 +78,32 @@ class PostCard extends StatelessWidget {
                   style: theme.textTheme.bodyMedium,
                 ),
               ],
-          if (post.images.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            PostImageGrid(images: post.images, compact: true),
-          ],
-          if (post.commentCount > 0) ...[
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Icon(Icons.chat_bubble_outline, size: 14, color: theme.colorScheme.onSurfaceVariant),
-                const SizedBox(width: 4),
-                Text(
-                  '${post.commentCount} comment${post.commentCount == 1 ? '' : 's'}',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
+              if (post.images.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                PostImageGrid(images: post.images, compact: true),
               ],
-            ),
-            if (post.latestCommentBody != null || post.latestCommentImages.isNotEmpty)
-              CommentPreviewCard(
-                authorName: post.latestCommentAuthorName ?? 'Unknown',
-                avatarUrl: post.latestCommentAvatarUrl,
-                body: post.latestCommentBody,
-                images: post.latestCommentImages,
-              ),
-          ],
+              if (post.commentCount > 0) ...[
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Icon(Icons.chat_bubble_outline, size: 14, color: theme.colorScheme.onSurfaceVariant),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${post.commentCount} comment${post.commentCount == 1 ? '' : 's'}',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+                if (post.latestCommentBody != null || post.latestCommentImages.isNotEmpty)
+                  CommentPreviewCard(
+                    authorName: post.latestCommentAuthorName ?? 'Unknown',
+                    avatarUrl: post.latestCommentAvatarUrl,
+                    body: post.latestCommentBody,
+                    images: post.latestCommentImages,
+                  ),
+              ],
             ],
           ),
         ),

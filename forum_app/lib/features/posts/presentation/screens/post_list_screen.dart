@@ -71,7 +71,12 @@ class _PostListScreenState extends State<PostListScreen> {
                 IconButton(
                   tooltip: 'Profile',
                   icon: const Icon(Icons.person),
-                  onPressed: () => context.push('/profile'),
+                  onPressed: () {
+                    final uid = Supabase.instance.client.auth.currentUser?.id;
+                    if (uid != null) {
+                      context.push('/profile/$uid');
+                    }
+                  },
                 ),
               if (authVm.isLoggedIn)
                 TextButton(
@@ -142,6 +147,9 @@ class _PostListScreenState extends State<PostListScreen> {
             return PostCard(
               post: post,
               onTap: () => context.push('/posts/${post.id}', extra: post),
+              onAuthorTap: post.author != null
+                  ? () => context.push('/profile/${post.author!.id}')
+                  : null,
             );
           },
         ),

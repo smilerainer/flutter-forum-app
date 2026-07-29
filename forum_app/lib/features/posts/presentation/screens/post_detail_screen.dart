@@ -167,7 +167,14 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
           if (post.author != null)
             Padding(
               padding: const EdgeInsets.only(bottom: 16),
-              child: AuthorTile(author: post.author),
+              child: InkWell(
+                onTap: () {
+                  if (post.author != null) {
+                    context.push('/profile/${post.author!.id}');
+                  }
+                },
+                child: AuthorTile(author: post.author),
+              ),
             ),
           if (post.body != null && post.body!.isNotEmpty) ...[
             Text(post.body!, style: Theme.of(context).textTheme.bodyLarge),

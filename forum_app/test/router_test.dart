@@ -12,8 +12,8 @@ void main() {
     test('logged out, /posts -> stays (public route)', () {
       expect(authRedirect(loggedIn: false, matchedLocation: '/posts'), isNull);
     });
-    test('logged out, /profile -> redirected to /login', () {
-      expect(authRedirect(loggedIn: false, matchedLocation: '/profile'), '/login');
+    test('logged out, /profile/abc123 -> stays (public route)', () {
+      expect(authRedirect(loggedIn: false, matchedLocation: '/profile/abc123'), isNull);
     });
     test('logged in, /login -> redirected to /posts', () {
       expect(authRedirect(loggedIn: true, matchedLocation: '/login'), '/posts');
@@ -24,8 +24,8 @@ void main() {
     test('logged in, /posts -> stays', () {
       expect(authRedirect(loggedIn: true, matchedLocation: '/posts'), isNull);
     });
-    test('logged in, /profile -> stays', () {
-      expect(authRedirect(loggedIn: true, matchedLocation: '/profile'), isNull);
+    test('logged in, /profile/abc123 -> stays (public route)', () {
+      expect(authRedirect(loggedIn: true, matchedLocation: '/profile/abc123'), isNull);
     });
   });
 }

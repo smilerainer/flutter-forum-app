@@ -19,6 +19,7 @@ String? authRedirect({required bool loggedIn, required String matchedLocation}) 
       matchedLocation.startsWith('/posts/') &&
           matchedLocation != '/posts/create' &&
           !matchedLocation.endsWith('/edit') ||
+      matchedLocation.startsWith('/profile/') ||
       matchedLocation.startsWith('/debug');
 
   if (!loggedIn && !onAuthScreen && !isPublicRoute) return '/login';
@@ -34,7 +35,12 @@ GoRouter buildRouter(AuthViewModel authViewModel, {GlobalKey<NavigatorState>? na
     routes: [
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(path: '/register', builder: (context, state) => const RegisterScreen()),
-      GoRoute(path: '/profile', builder: (context, state) => const ProfileScreen()),
+      GoRoute(
+        path: '/profile/:profileId',
+        builder: (context, state) => ProfileScreen(
+          profileId: state.pathParameters['profileId']!,
+        ),
+      ),
       GoRoute(
         path: '/posts/create',
         builder: (context, state) => const PostCreateScreen(),

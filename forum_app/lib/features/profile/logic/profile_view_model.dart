@@ -23,19 +23,23 @@ class ProfileViewModel extends ChangeNotifier {
         _authViewModel = authViewModel,
         _storageService = storageService ?? StorageService();
 
-  Future<void> load() async {
-    final uid = _authViewModel.user?.id;
-    if (uid == null) {
-      error = 'No user is currently signed in.';
+  Future<void> load({String? profileId}) async {
+    final targetId = profileId ?? _authViewModel.user?.id;
+
+    if (targetId == null) {
+      error = _profileId == null || _profileId == _authViewModel.user?.id
+          ? 'No user is currently signed in.'
+          : 'Invalid user ID.';
       notifyListeners();
       return;
     }
 
+    _profileId = profileId;
     isLoading = true;
     error = null;
     notifyListeners();
 
-    final result = await _profileService.fetchProfile(uid);
+    final result = await _profileService.fetchProfile(targetId);
 
     isLoading = false;
     if (result is Success<UserProfile>) {
@@ -46,6 +50,8 @@ class ProfileViewModel extends ChangeNotifier {
 
     notifyListeners();
   }
+
+  String? _profileId;
 
   Future<void> updateName(String name) async {
     final trimmed = name.trim();

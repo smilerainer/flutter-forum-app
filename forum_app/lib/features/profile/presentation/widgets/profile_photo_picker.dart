@@ -65,7 +65,7 @@ class _ProfilePhotoPickerState extends State<ProfilePhotoPicker> {
               image: hasAvatar
                   ? DecorationImage(
                       image: NetworkImage(widget.currentAvatarUrl!),
-                      fit: BoxFit.cover,
+                      fit: BoxFit.contain,
                     )
                   : null,
             ),
