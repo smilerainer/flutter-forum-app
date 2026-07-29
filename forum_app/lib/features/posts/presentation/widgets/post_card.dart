@@ -95,6 +95,7 @@ class PostCard extends StatelessWidget {
             if (post.latestCommentBody != null || post.latestCommentImages.isNotEmpty)
               CommentPreviewCard(
                 authorName: post.latestCommentAuthorName ?? 'Unknown',
+                avatarUrl: post.latestCommentAvatarUrl,
                 body: post.latestCommentBody,
                 images: post.latestCommentImages,
               ),

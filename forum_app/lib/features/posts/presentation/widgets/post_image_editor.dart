@@ -166,11 +166,6 @@ class _PostImageEditorState extends State<PostImageEditor> {
             ),
           const SizedBox(height: 16),
         ],
-        Text(
-          'Add New Images',
-          style: Theme.of(context).textTheme.titleSmall,
-        ),
-        const SizedBox(height: 8),
         ImagePickerWidget(
           onImagesChanged: _onNewImagesChanged,
         ),

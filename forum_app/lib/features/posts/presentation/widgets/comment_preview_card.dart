@@ -4,15 +4,26 @@ import 'package:forum_app/core/data/storage_service.dart';
 
 class CommentPreviewCard extends StatelessWidget {
   final String authorName;
+  final String? avatarUrl;
   final String? body;
   final List<ImageRef> images;
 
   const CommentPreviewCard({
     super.key,
     required this.authorName,
+    this.avatarUrl,
     this.body,
     this.images = const [],
   });
+
+  Widget _buildAvatar() {
+    final hasUrl = avatarUrl != null && avatarUrl!.isNotEmpty;
+    return CircleAvatar(
+      radius: 10,
+      backgroundImage: hasUrl ? NetworkImage(avatarUrl!) : null,
+      child: hasUrl ? null : Text(authorName[0].toUpperCase()),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,10 +42,7 @@ class CommentPreviewCard extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  CircleAvatar(
-                    radius: 10,
-                    child: Text(authorName[0].toUpperCase()),
-                  ),
+                  _buildAvatar(),
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(

@@ -13,6 +13,7 @@ class Post {
   final int commentCount;
   final String? latestCommentBody;
   final String? latestCommentAuthorName;
+  final String? latestCommentAvatarUrl;
   final List<ImageRef> latestCommentImages;
 
   const Post({
@@ -27,6 +28,7 @@ class Post {
     this.commentCount = 0,
     this.latestCommentBody,
     this.latestCommentAuthorName,
+    this.latestCommentAvatarUrl,
     this.latestCommentImages = const [],
   });
 
@@ -62,6 +64,7 @@ class Post {
       commentCount: comments?.length ?? 0,
       latestCommentBody: latestComment?['body'] as String?,
       latestCommentAuthorName: _firstNestedField(json['comments'], 'profiles', 'display_name'),
+      latestCommentAvatarUrl: _firstNestedField(json['comments'], 'profiles', 'avatar_url'),
       latestCommentImages: (latestComment?['comment_images'] as List<dynamic>?)
           ?.map((e) => ImageRef.fromJson(e as Map<String, dynamic>))
           .toList() ??
@@ -88,7 +91,10 @@ class Post {
         ? [
             {
               'body': latestCommentBody,
-              'profiles': latestCommentAuthorName != null ? {'display_name': latestCommentAuthorName} : null,
+              'profiles': latestCommentAuthorName != null ? {
+                'display_name': latestCommentAuthorName,
+                'avatar_url': latestCommentAvatarUrl,
+              } : null,
               'comment_images': latestCommentImages.map((e) => e.toJson()).toList(),
             }
           ]

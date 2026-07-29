@@ -5,7 +5,6 @@ import 'package:forum_app/core/result.dart';
 import 'package:forum_app/core/widgets/image_picker_widget.dart';
 import 'package:forum_app/features/comments/data/comment.dart';
 import 'package:forum_app/features/comments/data/comment_service.dart';
-import 'package:forum_app/features/comments/presentation/widgets/comment_image_picker.dart';
 import 'package:forum_app/features/comments/presentation/widgets/comment_input.dart';
 import 'package:forum_app/features/comments/presentation/widgets/comment_tile.dart';
 import 'package:forum_app/features/posts/data/paginated_result.dart';
@@ -172,13 +171,13 @@ class _DebugConsoleState extends State<DebugConsole> {
                   },
                 ),
                 const SizedBox(height: 8),
-                CommentImagePicker(
-                  onImagesChanged: (images) {
-                    setState(() => _pickedImages
-                      ..clear()
-                      ..addAll(images));
-                  },
-                ),
+                 ImagePickerWidget(
+                   onImagesChanged: (images) {
+                     setState(() => _pickedImages
+                       ..clear()
+                       ..addAll(images));
+                   },
+                 ),
               ],
             ),
           ),

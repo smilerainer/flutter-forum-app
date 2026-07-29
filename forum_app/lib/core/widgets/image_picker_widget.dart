@@ -30,11 +30,8 @@ class ImagePickerWidget extends StatefulWidget {
 
 class _ImagePickerWidgetState extends State<ImagePickerWidget> {
   final List<PickerImage> _images = [];
-  final Set<int> _selected = {};
   final ImagePicker _picker = ImagePicker();
   bool _busy = false;
-
-  bool get _massMode => _selected.isNotEmpty;
 
   Future<void> _pick() async {
     setState(() => _busy = true);
@@ -65,49 +62,9 @@ class _ImagePickerWidgetState extends State<ImagePickerWidget> {
     widget.onImagesChanged?.call(List.unmodifiable(_images));
   }
 
-  void _toggleSelection(int index) {
-    setState(() {
-      if (_selected.contains(index)) {
-        _selected.remove(index);
-      } else {
-        _selected.add(index);
-      }
-    });
-  }
-
   void _removeSingle(int index) {
     setState(() => _images.removeAt(index));
-    final shifted = <int>{};
-    for (final i in _selected) {
-      if (i < index) {
-        shifted.add(i);
-      } else if (i > index) {
-        shifted.add(i - 1);
-      }
-    }
-    _selected
-      ..clear()
-      ..addAll(shifted);
     widget.onImagesChanged?.call(List.unmodifiable(_images));
-  }
-
-  void _removeSelected() {
-    final sorted = _selected.toList()..sort((a, b) => b.compareTo(a));
-    for (final index in sorted) {
-      _images.removeAt(index);
-    }
-    _selected.clear();
-    widget.onImagesChanged?.call(List.unmodifiable(_images));
-  }
-
-  void _toggleSelectAll() {
-    setState(() {
-      if (_selected.length == _images.length) {
-        _selected.clear();
-      } else {
-        _selected.addAll(List.generate(_images.length, (i) => i));
-      }
-    });
   }
 
   void _showPreview(PickerImage image) {
@@ -199,101 +156,52 @@ class _ImagePickerWidgetState extends State<ImagePickerWidget> {
               scrollDirection: Axis.horizontal,
               itemCount: _images.length,
               separatorBuilder: (_, _) => const SizedBox(width: 8),
-              itemBuilder: (_, index) {
-                final image = _images[index];
-                final isSelected = _selected.contains(index);
-                return GestureDetector(
-                  onTap: () => _showPreview(image),
-                  child: Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: Image.memory(
-                          image.bytes,
-                          width: 100,
-                          height: 100,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, _, _) => const SizedBox(
-                            width: 100,
-                            height: 100,
-                            child: Center(child: Icon(Icons.broken_image)),
-                          ),
-                        ),
-                      ),
-                      Positioned(
-                        top: 2,
-                        left: 2,
-                        child: GestureDetector(
-                          onTap: () => _toggleSelection(index),
-                          child: Container(
-                            padding: const EdgeInsets.all(2),
-                            decoration: BoxDecoration(
-                              color: isSelected ? Colors.grey.shade600 : Colors.white54,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                              isSelected ? Icons.check : Icons.circle_outlined,
-                              size: 20,
-                              color: isSelected ? Colors.white : Colors.black87,
-                            ),
-                          ),
-                        ),
-                      ),
-                      if (!_massMode)
-                        Positioned(
-                          top: 2,
-                          right: 2,
-                          child: GestureDetector(
-                            onTap: () => _removeSingle(index),
-                            child: Container(
-                              padding: const EdgeInsets.all(2),
-                              decoration: const BoxDecoration(
-                                color: Colors.red,
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(Icons.close, size: 18, color: Colors.white),
-                            ),
-                          ),
-                        ),
-                      if (isSelected)
-                        Positioned.fill(
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: Colors.grey.shade300.withValues(alpha: 0.35),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                        ),
-                    ],
+        itemBuilder: (_, index) {
+          final image = _images[index];
+          return GestureDetector(
+            onTap: () => _showPreview(image),
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.memory(
+                    image.bytes,
+                    width: 100,
+                    height: 100,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, _, _) => const SizedBox(
+                      width: 100,
+                      height: 100,
+                      child: Center(child: Icon(Icons.broken_image)),
+                    ),
                   ),
-                );
-              },
+                ),
+                Positioned(
+                  top: 2,
+                  right: 2,
+                  child: GestureDetector(
+                    onTap: () => _removeSingle(index),
+                    child: Container(
+                      padding: const EdgeInsets.all(2),
+                      decoration: const BoxDecoration(
+                        color: Colors.red,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.close, size: 18, color: Colors.white),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
             ),
           ),
           const SizedBox(height: 8),
-          Row(
-            children: [
-              Text(
-                '${_images.length} image${_images.length == 1 ? '' : 's'}',
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-              const Spacer(),
-              if (_massMode) ...[
-                TextButton(
-                  onPressed: _toggleSelectAll,
-                  child: Text(
-                    _selected.length == _images.length ? 'Deselect All' : 'Select All',
-                  ),
-                ),
-                const SizedBox(width: 8),
-                FilledButton.tonalIcon(
-                  onPressed: _removeSelected,
-                  icon: const Icon(Icons.delete_outline, size: 18),
-                  label: Text('Delete Selected (${_selected.length})'),
-                ),
-              ],
-            ],
+          Text(
+            '${_images.length} image${_images.length == 1 ? '' : 's'}',
+            style: Theme.of(context).textTheme.bodySmall,
           ),
         ],
       ],
