@@ -6,11 +6,13 @@ import 'package:forum_app/core/widgets/image_preview_dialog.dart';
 class PostImageGrid extends StatelessWidget {
   final List<ImageRef> images;
   final bool compact;
+  final StorageService? storageService;
 
   const PostImageGrid({
     super.key,
     required this.images,
     this.compact = false,
+    this.storageService,
   });
 
   @override
@@ -19,14 +21,15 @@ class PostImageGrid extends StatelessWidget {
 
     final sortedImages = List<ImageRef>.of(images)..sort((a, b) => a.position.compareTo(b.position));
 
+    final storage = storageService ?? StorageService();
+    
     if (compact) {
-      return _buildCompact(context, sortedImages);
+      return _buildCompact(context, sortedImages, storage);
     }
-    return _buildGrid(context, sortedImages);
+    return _buildGrid(context, sortedImages, storage);
   }
 
-  Widget _buildGrid(BuildContext context, List<ImageRef> images) {
-    final storage = StorageService();
+  Widget _buildGrid(BuildContext context, List<ImageRef> images, StorageService storage) {
     
     if (images.length == 1) {
       final image = images.first;
@@ -71,8 +74,7 @@ class PostImageGrid extends StatelessWidget {
     );
   }
 
-  Widget _buildCompact(BuildContext context, List<ImageRef> images) {
-    final storage = StorageService();
+  Widget _buildCompact(BuildContext context, List<ImageRef> images, StorageService storage) {
     return SizedBox(
       height: 80,
       child: ListView.separated(

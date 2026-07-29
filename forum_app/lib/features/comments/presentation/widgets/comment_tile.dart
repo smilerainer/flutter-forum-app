@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:forum_app/core/widgets/author_tile.dart';
+import 'package:forum_app/core/data/storage_service.dart';
 import 'package:forum_app/features/comments/data/comment.dart';
 import 'package:forum_app/features/posts/presentation/widgets/post_image_grid.dart';
 import 'package:forum_app/features/posts/presentation/widgets/post_image_editor.dart';
@@ -15,12 +16,16 @@ class CommentTile extends StatefulWidget {
     Set<String> removedIds,
     List<PickerImage> newImages,
   })? onEdit;
+  final String? currentUserId;
+  final StorageService? storageService;
 
   const CommentTile({
     super.key,
     required this.comment,
     this.onDelete,
     this.onEdit,
+    this.currentUserId,
+    this.storageService,
   });
 
   @override
@@ -83,7 +88,7 @@ class _CommentTileState extends State<CommentTile> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final currentUserId = Supabase.instance.client.auth.currentUser?.id;
+    final currentUserId = widget.currentUserId;
     final isOwn = currentUserId != null && widget.comment.userId == currentUserId;
 
     return Card(
@@ -195,7 +200,7 @@ class _CommentTileState extends State<CommentTile> {
               ],
               if (widget.comment.images.isNotEmpty) ...[
                 const SizedBox(height: 8),
-                PostImageGrid(images: widget.comment.images, compact: true),
+                PostImageGrid(images: widget.comment.images, compact: true, storageService: widget.storageService),
               ],
             ],
           ],

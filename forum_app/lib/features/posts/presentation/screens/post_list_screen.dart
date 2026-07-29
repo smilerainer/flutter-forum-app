@@ -11,7 +11,10 @@ import 'package:forum_app/features/profile/data/profile_service.dart';
 import 'package:forum_app/features/profile/data/user_profile.dart';
 
 class PostListScreen extends StatefulWidget {
-  const PostListScreen({super.key});
+  final ProfileService? profileService;
+  final PostService? postService;
+
+  const PostListScreen({super.key, this.profileService, this.postService});
 
   @override
   State<PostListScreen> createState() => _PostListScreenState();
@@ -19,21 +22,20 @@ class PostListScreen extends StatefulWidget {
 
 class _PostListScreenState extends State<PostListScreen> {
   late final PostListViewModel _viewModel;
-  final _profileService = ProfileService();
   UserProfile? _currentUserProfile;
 
   @override
   void initState() {
     super.initState();
-    _viewModel = PostListViewModel(PostService());
+    _viewModel = PostListViewModel(widget.postService ?? PostService());
     _viewModel.loadInitial();
     _loadCurrentUserProfile();
   }
 
   Future<void> _loadCurrentUserProfile() async {
-    final uid = Supabase.instance.client.auth.currentUser?.id;
+    final uid = context.read<AuthViewModel>().user?.id;
     if (uid == null) return;
-    final result = await _profileService.fetchProfile(uid);
+    final result = await (widget.profileService ?? ProfileService()).fetchProfile(uid);
     if (!mounted) return;
     if (result is Success<UserProfile>) {
       setState(() {
@@ -72,7 +74,7 @@ class _PostListScreenState extends State<PostListScreen> {
                   tooltip: 'Profile',
                   icon: const Icon(Icons.person),
                   onPressed: () {
-                    final uid = Supabase.instance.client.auth.currentUser?.id;
+                    final uid = authVm.user?.id;
                     if (uid != null) {
                       context.push('/profile/$uid');
                     }

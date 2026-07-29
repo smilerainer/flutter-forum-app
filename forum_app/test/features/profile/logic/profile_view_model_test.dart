@@ -120,7 +120,7 @@ void main() {
       );
       when(() => mockStorageService.deleteFile(path: any(named: 'path')))
           .thenAnswer((_) async => const Success(null));
-      when(() => mockProfileService.updateProfile(any(), any()))
+      when(() => mockProfileService.clearAvatar(any()))
           .thenAnswer((_) async => const Success(null));
 
       final vm = ProfileViewModel(
