@@ -168,12 +168,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            displayName.isEmpty ? 'Unknown' : displayName,
-            style: theme.textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-            textAlign: TextAlign.center,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                displayName.isEmpty ? 'Unknown' : displayName,
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              if (_viewModel.profile?.isAdmin ?? false) ...[
+                const SizedBox(width: 8),
+                Chip(
+                  label: const Text('Admin', style: TextStyle(fontSize: 12)),
+                  backgroundColor: theme.colorScheme.primaryContainer,
+                  padding: EdgeInsets.zero,
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+              ],
+            ],
           ),
           const SizedBox(height: 8),
           Text(

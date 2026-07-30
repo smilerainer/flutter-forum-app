@@ -150,6 +150,8 @@ class _PostListScreenState extends State<PostListScreen> {
               );
             }
             final post = vm.items[adjustedIndex];
+            final isAdmin = _currentUserProfile?.isAdmin ?? false;
+            final canDelete = isAdmin || (authVm.isLoggedIn && post.userId == authVm.user!.id);
             return PostCard(
               post: post,
               onTap: () async {
@@ -159,6 +161,34 @@ class _PostListScreenState extends State<PostListScreen> {
               onAuthorTap: post.author != null
                   ? () => context.push('/profile/${post.author!.id}')
                   : null,
+              onDelete: canDelete ? () async {
+                final errorColor = Theme.of(context).colorScheme.error;
+                final confirmed = await showDialog<bool>(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text('Delete post?'),
+                    content: const Text('Are you sure you want to delete this post? This cannot be undone.'),
+                    actions: [
+                      TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+                      FilledButton(
+                        onPressed: () => Navigator.pop(context, true),
+                        style: FilledButton.styleFrom(backgroundColor: errorColor),
+                        child: const Text('Delete'),
+                      ),
+                    ],
+                  ),
+                );
+                if (confirmed == true) {
+                  final result = await (widget.postService ?? PostService()).deletePost(post.id);
+                  if (!mounted) return;
+                  if (result is Success<void>) {
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Post deleted')));
+                    vm.loadInitial();
+                  } else if (result is Failure<void>) {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(result.message)));
+                  }
+                }
+              } : null,
             );
           },
         ),

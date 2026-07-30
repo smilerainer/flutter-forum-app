@@ -7,8 +7,9 @@ class PostCard extends StatelessWidget {
   final Post post;
   final VoidCallback? onTap;
   final VoidCallback? onAuthorTap;
+  final VoidCallback? onDelete;
 
-  const PostCard({super.key, required this.post, this.onTap, this.onAuthorTap});
+  const PostCard({super.key, required this.post, this.onTap, this.onAuthorTap, this.onDelete});
 
   String _timeAgo(DateTime dt) {
     final diff = DateTime.now().difference(dt);
@@ -59,6 +60,15 @@ class PostCard extends StatelessWidget {
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
                     ),
+                    if (onDelete != null) ...[
+                      const SizedBox(width: 4),
+                      IconButton(
+                        icon: Icon(Icons.delete_outline, size: 18, color: theme.colorScheme.error),
+                        onPressed: onDelete,
+                        tooltip: 'Delete post',
+                        visualDensity: VisualDensity.compact,
+                      ),
+                    ],
                   ],
                 ),
               ),

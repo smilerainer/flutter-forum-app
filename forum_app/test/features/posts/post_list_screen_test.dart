@@ -7,6 +7,7 @@ import 'package:forum_app/features/auth/logic/auth_view_model.dart';
 import 'package:forum_app/features/posts/presentation/screens/post_list_screen.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:forum_app/features/profile/data/profile_service.dart';
+import 'package:forum_app/features/profile/data/user_profile.dart';
 import 'package:forum_app/features/posts/data/post_service.dart';
 import 'package:forum_app/features/posts/data/post.dart';
 import 'package:forum_app/features/posts/data/paginated_result.dart';
@@ -31,6 +32,12 @@ class FakeAuthViewModel extends ChangeNotifier implements AuthViewModel {
 
   @override
   User? get user => null;
+
+  @override
+  UserProfile? get profile => null;
+
+  @override
+  bool get isAdmin => false;
 
   @override
   Future<void> signOut() async {

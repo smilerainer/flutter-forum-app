@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:forum_app/core/env.dart';
 import 'package:forum_app/features/auth/data/auth_service.dart';
 import 'package:forum_app/features/auth/logic/auth_view_model.dart';
+import 'package:forum_app/features/profile/data/profile_service.dart';
 import 'package:forum_app/router.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -23,7 +24,7 @@ Future<void> main() async {
     publishableKey: Env.supabasePublishableKey,
   );
 
-  final authViewModel = AuthViewModel(AuthService());
+  final authViewModel = AuthViewModel(AuthService(), profileService: ProfileService());
   final router = buildRouter(authViewModel, navigatorKey: _rootNavigatorKey);
 
   runApp(MyApp(authViewModel: authViewModel, router: router));

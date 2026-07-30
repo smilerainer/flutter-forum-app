@@ -18,20 +18,42 @@ class ProfileService {
     try {
       raw = await _client
       .from('profiles')
-      .select('display_name, avatar_url, created_at, updated_at')
+      .select('display_name, avatar_url, is_admin, created_at, updated_at')
       .filter('id', 'eq', uid)
       .maybeSingle() as Map<String, dynamic>;
       return Success(UserProfile(
         id: uid,
         displayName: raw['display_name'] as String?,
         avatarUrl: raw['avatar_url'] as String?,
+        isAdmin: raw['is_admin'] as bool? ?? false,
         createdAt: DateTime.parse(raw['created_at'] as String),
         updatedAt: raw['updated_at'] != null
             ? DateTime.parse(raw['updated_at'] as String)
             : null,
       ));
     } on PostgrestException catch(e){
-      return Failure(e.message);
+      // Fallback if is_admin column doesn't exist yet (pre-migration)
+      try {
+        raw = await _client
+        .from('profiles')
+        .select('display_name, avatar_url, created_at, updated_at')
+        .filter('id', 'eq', uid)
+        .maybeSingle() as Map<String, dynamic>;
+        return Success(UserProfile(
+          id: uid,
+          displayName: raw['display_name'] as String?,
+          avatarUrl: raw['avatar_url'] as String?,
+          isAdmin: false,
+          createdAt: DateTime.parse(raw['created_at'] as String),
+          updatedAt: raw['updated_at'] != null
+              ? DateTime.parse(raw['updated_at'] as String)
+              : null,
+        ));
+      } on PostgrestException {
+        return Failure(e.message);
+      } catch (_) {
+        return Failure('Failed to fetch profile. Please try again.');
+      }
     } catch (_) {
       return Failure('Failed to fetch profile. Please try again.');
     }

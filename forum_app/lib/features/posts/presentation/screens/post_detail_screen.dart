@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:forum_app/core/result.dart';
 import 'package:forum_app/core/widgets/author_tile.dart';
+import 'package:forum_app/features/auth/logic/auth_view_model.dart';
 import 'package:forum_app/features/posts/data/post.dart';
 import 'package:forum_app/features/posts/data/post_service.dart';
 import 'package:forum_app/features/comments/presentation/widgets/comment_section.dart';
@@ -66,7 +68,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
       appBar: AppBar(
         title: Text(_post?.title ?? 'Post'),
         actions: [
-          if (_post != null && _isOwnPost(_post!)) ...[
+          if (_post != null && _canDeletePost(_post!)) ...[
             IconButton(
               icon: const Icon(Icons.edit),
               onPressed: () async {
@@ -89,9 +91,11 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     );
   }
 
-  bool _isOwnPost(Post post) {
+  bool _canDeletePost(Post post) {
     final currentUserId = Supabase.instance.client.auth.currentUser?.id;
-    return currentUserId != null && post.userId == currentUserId;
+    final authVm = context.read<AuthViewModel>();
+    if (currentUserId == null) return false;
+    return authVm.isAdmin || post.userId == currentUserId;
   }
 
   Future<void> _showDeletePostDialog() async {

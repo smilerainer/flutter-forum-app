@@ -2,10 +2,12 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:forum_app/core/data/storage_service.dart';
 import 'package:forum_app/core/widgets/image_picker_widget.dart';
+import 'package:forum_app/features/auth/logic/auth_view_model.dart';
 import 'package:forum_app/features/comments/data/comment_service.dart';
 import 'package:forum_app/features/comments/logic/comment_view_model.dart';
 import 'package:forum_app/features/comments/presentation/widgets/comment_input.dart';
@@ -164,85 +166,91 @@ class _CommentSectionState extends State<CommentSection> {
 
   @override
   Widget build(BuildContext context) {
+    final authVm = context.watch<AuthViewModel>();
+    final currentUserId = authVm.user?.id;
+    final isAdmin = authVm.isAdmin;
+
     return ListenableBuilder(
       listenable: _viewModel,
       builder: (context, _) {
         if (_viewModel.isLoading && _viewModel.items.isEmpty) {
-          return const Padding(
-            padding: EdgeInsets.all(16),
-            child: Center(child: CircularProgressIndicator()),
-          );
-        }
+            return const Padding(
+              padding: EdgeInsets.all(16),
+              child: Center(child: CircularProgressIndicator()),
+            );
+          }
 
-        if (_viewModel.error != null && _viewModel.items.isEmpty) {
-          return Padding(
-            padding: const EdgeInsets.all(16),
-            child: Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text('Error: ${_viewModel.error}'),
-                  const SizedBox(height: 8),
-                  FilledButton(
-                    onPressed: () => _viewModel.loadComments(),
-                    child: const Text('Retry'),
-                  ),
-                ],
-              ),
-            ),
-          );
-        }
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Text(
-                'Comments',
-                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
-              ),
-            ),
-            if (_viewModel.items.isEmpty)
-              const Padding(
-                padding: EdgeInsets.all(16),
-                child: Center(
-                  child: Text(
-                    'No comments yet',
-                    style: TextStyle(color: Colors.grey),
-                  ),
+          if (_viewModel.error != null && _viewModel.items.isEmpty) {
+            return Padding(
+              padding: const EdgeInsets.all(16),
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('Error: ${_viewModel.error}'),
+                    const SizedBox(height: 8),
+                    FilledButton(
+                      onPressed: () => _viewModel.loadComments(),
+                      child: const Text('Retry'),
+                    ),
+                  ],
                 ),
-              )
-            else
-              ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: _viewModel.items.length,
-                itemBuilder: (_, index) {
-                  final comment = _viewModel.items[index];
-                  return CommentTile(
-                    comment: comment,
-                    onDelete: () async {
-                      await _viewModel.deleteComment(comment.id);
-                      _viewModel.loadComments();
-                    },
-                    onEdit:
-                        (
-                          newBody, {
-                          Set<String> removedIds = const {},
-                          List<PickerImage> newImages = const [],
-                        }) async {
-                          await _viewModel.editComment(
-                            comment.id,
-                            newBody,
-                            removedIds: removedIds,
-                            newImages: newImages,
-                          );
-                          _viewModel.loadComments();
-                        },
-                  );
-                },
               ),
+            );
+          }
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Text(
+                  'Comments',
+                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+                ),
+              ),
+              if (_viewModel.items.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Center(
+                    child: Text(
+                      'No comments yet',
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                  ),
+                )
+              else
+                ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: _viewModel.items.length,
+                  itemBuilder: (_, index) {
+                    final comment = _viewModel.items[index];
+                    final canDelete = isAdmin || (currentUserId != null && comment.userId == currentUserId);
+                    return CommentTile(
+                      comment: comment,
+                      currentUserId: currentUserId,
+                      onDelete: canDelete ? () async {
+                        await _viewModel.deleteComment(comment.id);
+                        _viewModel.loadComments();
+                      } : null,
+                      onEdit:
+                          (
+                            newBody, {
+                            Set<String> removedIds = const {},
+                            List<PickerImage> newImages = const [],
+                          }) async {
+                            await _viewModel.editComment(
+                              comment.id,
+                              newBody,
+                              removedIds: removedIds,
+                              newImages: newImages,
+                            );
+                            _viewModel.loadComments();
+                          },
+                    );
+                  },
+                ),
             const Divider(height: 1),
             _buildCommentInput(),
           ],
