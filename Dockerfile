@@ -1,7 +1,7 @@
 # --- build stage ---
 FROM ghcr.io/cirruslabs/flutter:stable AS build
 WORKDIR /app
-COPY . .
+COPY forum_app/ .
 ARG SUPABASE_URL
 ARG SUPABASE_PUBLISHABLE_KEY
 RUN flutter build web --release \
