@@ -3,10 +3,10 @@ FROM ghcr.io/cirruslabs/flutter:stable AS build
 WORKDIR /app
 COPY . .
 ARG SUPABASE_URL
-ARG SUPABASE_ANON_KEY
+ARG SUPABASE_PUBLISHABLE_KEY
 RUN flutter build web --release \
   --dart-define=SUPABASE_URL=$SUPABASE_URL \
-  --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY
+  --dart-define=SUPABASE_PUBLISHABLE_KEY=$SUPABASE_PUBLISHABLE_KEY
 
 # --- serve stage ---
 FROM nginx:alpine
