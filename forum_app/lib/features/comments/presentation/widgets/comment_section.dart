@@ -61,9 +61,13 @@ class _CommentSectionState extends State<CommentSection> {
   }
 
   Future<void> _onSubmit(String body) async {
-    await _viewModel.addComment(body, _pickedImages.map((p) => p.file).toList());
+    await _viewModel.addComment(
+      body,
+      _pickedImages.map((p) => p.file).toList(),
+    );
     if (mounted && _viewModel.error == null) {
       setState(() => _pickedImages = []);
+      _viewModel.loadComments();
     }
   }
 
@@ -81,7 +85,7 @@ class _CommentSectionState extends State<CommentSection> {
             children: [
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
-                  child: Image.memory(
+                child: Image.memory(
                   picked.bytes,
                   width: 80,
                   height: 80,
@@ -144,10 +148,7 @@ class _CommentSectionState extends State<CommentSection> {
           if (_pickedImages.isNotEmpty) const SizedBox(height: 8),
           Row(
             children: [
-              IconButton(
-                icon: const Icon(Icons.image),
-                onPressed: _pickImages,
-              ),
+              IconButton(icon: const Icon(Icons.image), onPressed: _pickImages),
               Expanded(
                 child: CommentInput(
                   onSubmit: _onSubmit,
@@ -221,9 +222,24 @@ class _CommentSectionState extends State<CommentSection> {
                   final comment = _viewModel.items[index];
                   return CommentTile(
                     comment: comment,
-                    onDelete: () => _viewModel.deleteComment(comment.id),
-                    onEdit: (newBody, {Set<String> removedIds = const {}, List<PickerImage> newImages = const []}) =>
-                        _viewModel.editComment(comment.id, newBody, removedIds: removedIds, newImages: newImages),
+                    onDelete: () async {
+                      await _viewModel.deleteComment(comment.id);
+                      _viewModel.loadComments();
+                    },
+                    onEdit:
+                        (
+                          newBody, {
+                          Set<String> removedIds = const {},
+                          List<PickerImage> newImages = const [],
+                        }) async {
+                          await _viewModel.editComment(
+                            comment.id,
+                            newBody,
+                            removedIds: removedIds,
+                            newImages: newImages,
+                          );
+                          _viewModel.loadComments();
+                        },
                   );
                 },
               ),

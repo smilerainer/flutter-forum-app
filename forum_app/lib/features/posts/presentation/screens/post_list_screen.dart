@@ -34,7 +34,8 @@ class _PostListScreenState extends State<PostListScreen> {
   Future<void> _loadCurrentUserProfile() async {
     final uid = context.read<AuthViewModel>().user?.id;
     if (uid == null) return;
-    final result = await (widget.profileService ?? ProfileService()).fetchProfile(uid);
+    final result = await (widget.profileService ?? ProfileService())
+        .fetchProfile(uid);
     if (!mounted) return;
     if (result is Success<UserProfile>) {
       setState(() {
@@ -49,9 +50,13 @@ class _PostListScreenState extends State<PostListScreen> {
     super.dispose();
   }
 
-  bool _onScrollNotification(ScrollNotification notification, PostListViewModel vm) {
-    if (notification is ScrollEndNotification && notification.metrics.pixels >=
-        notification.metrics.maxScrollExtent - 200) {
+  bool _onScrollNotification(
+    ScrollNotification notification,
+    PostListViewModel vm,
+  ) {
+    if (notification is ScrollEndNotification &&
+        notification.metrics.pixels >=
+            notification.metrics.maxScrollExtent - 200) {
       vm.loadMore();
     }
     return false;
@@ -113,10 +118,7 @@ class _PostListScreenState extends State<PostListScreen> {
           children: [
             Text('Error: ${vm.error}'),
             const SizedBox(height: 16),
-            FilledButton(
-              onPressed: vm.loadInitial,
-              child: const Text('Retry'),
-            ),
+            FilledButton(onPressed: vm.loadInitial, child: const Text('Retry')),
           ],
         ),
       );
@@ -131,7 +133,10 @@ class _PostListScreenState extends State<PostListScreen> {
       child: RefreshIndicator(
         onRefresh: vm.loadInitial,
         child: ListView.builder(
-          itemCount: vm.items.length + (vm.hasMore ? 1 : 0) + (authVm.isLoggedIn ? 1 : 0),
+          itemCount:
+              vm.items.length +
+              (vm.hasMore ? 1 : 0) +
+              (authVm.isLoggedIn ? 1 : 0),
           itemBuilder: (context, index) {
             final hasCreatePrompt = authVm.isLoggedIn;
             if (hasCreatePrompt && index == 0) {
@@ -147,7 +152,10 @@ class _PostListScreenState extends State<PostListScreen> {
             final post = vm.items[adjustedIndex];
             return PostCard(
               post: post,
-              onTap: () => context.push('/posts/${post.id}', extra: post),
+              onTap: () async {
+                await context.push('/posts/${post.id}', extra: post);
+                vm.loadInitial();
+              },
               onAuthorTap: post.author != null
                   ? () => context.push('/profile/${post.author!.id}')
                   : null,
